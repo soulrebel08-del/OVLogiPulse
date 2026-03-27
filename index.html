@@ -2,7 +2,441 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" conten<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logistics Reports Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0b0c10;
+    --surface:  #13141a;
+    --surface2: #1a1b23;
+    --border:   #1e2030;
+    --accent:   #00e5ff;
+    --accent2:  #ff6b35;
+    --accent3:  #7c3aed;
+    --accent4:  #10b981;
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --new:      #10b981;
+    --updated:  #f59e0b;
+    --error:    #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+    background-size: 40px 40px; pointer-events: none; z-index: 0;
+  }
+  .container { position: relative; z-index: 1; max-width: 1500px; margin: 0 auto; padding: 28px 24px; }
+
+  /* HEADER */
+  header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+  .logo-block h1 { font-size: 26px; font-weight: 800; color: #fff; line-height: 1; }
+  .logo-block h1 span { color: var(--accent); }
+  .logo-block p { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 5px; letter-spacing: 2px; text-transform: uppercase; }
+  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .status-pill { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); padding: 5px 13px; border-radius: 100px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
+  .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--new); animation: pulse 2s ease-in-out infinite; }
+  .status-pill.error .dot { background: var(--error); animation: none; }
+  .status-pill.idle  .dot { background: var(--muted); animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(16,185,129,0.4);}50%{opacity:.7;box-shadow:0 0 0 6px rgba(16,185,129,0);} }
+  #lastChecked { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); }
+
+  /* CONFIG */
+  .config-banner { background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(0,229,255,0.06)); border: 1px solid rgba(124,58,237,0.35); border-radius: 12px; padding: 18px 22px; margin-bottom: 28px; }
+  .config-banner h3 { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+  .config-banner p  { font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.6; }
+  .config-banner p code { background: rgba(0,0,0,0.4); padding: 1px 5px; border-radius: 3px; font-family: 'Space Mono', monospace; font-size: 10px; color: var(--accent2); }
+  .config-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .config-banner input { background: rgba(0,0,0,0.4); border: 1px solid var(--accent3); color: var(--text); padding: 7px 12px; border-radius: 7px; font-family: 'Space Mono', monospace; font-size: 12px; flex: 1; min-width: 260px; outline: none; }
+  .config-banner input:focus { border-color: var(--accent); }
+  .config-banner button { background: var(--accent3); color: #fff; border: none; padding: 7px 18px; border-radius: 7px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+  /* SECTION HEADERS */
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; margin-top: 28px; }
+  .section-header h2 { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 3px; white-space: nowrap; }
+  .section-header .line { flex: 1; height: 1px; background: var(--border); }
+  .section-header .tag { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 2px 8px; border-radius: 4px; }
+
+  /* STAT GRID */
+  .stat-grid { display: grid; gap: 12px; }
+  .stat-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
+  .stat-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .stat-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .stat-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; position: relative; overflow: hidden; transition: border-color .2s, transform .15s; }
+  .kpi-card:hover { border-color: var(--card-color, var(--accent)); transform: translateY(-1px); }
+  .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: var(--card-color, var(--accent)); }
+  .kpi-card .kpi-label { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+  .kpi-card .kpi-value { font-size: 30px; font-weight: 800; color: var(--card-color, var(--accent)); line-height: 1; }
+  .kpi-card .kpi-value.sm { font-size: 18px; padding-top: 4px; }
+  .kpi-card .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+  /* WIDE CARDS */
+  .wide-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+  .wide-card h4 { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+
+  .bar-list { list-style: none; }
+  .bar-list li { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; }
+  .bar-list li:last-child { margin-bottom: 0; }
+  .bar-list .bar-label { min-width: 140px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
+  .bar-list .bar-track { flex: 1; background: rgba(255,255,255,0.05); border-radius: 3px; height: 6px; overflow: hidden; }
+  .bar-list .bar-fill  { height: 100%; border-radius: 3px; background: var(--bar-color, var(--accent)); }
+  .bar-list .bar-count { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); min-width: 30px; text-align: right; }
+
+  /* BADGE CHIPS */
+  .chip-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { padding: 3px 10px; border-radius: 100px; font-family: 'Space Mono', monospace; font-size: 10px; border: 1px solid; }
+  .chip.green  { background: rgba(16,185,129,0.1); color: var(--new);     border-color: rgba(16,185,129,0.3); }
+  .chip.orange { background: rgba(245,158,11,0.1); color: var(--updated); border-color: rgba(245,158,11,0.3); }
+  .chip.cyan   { background: rgba(0,229,255,0.1);  color: var(--accent);  border-color: rgba(0,229,255,0.3); }
+  .chip.purple { background: rgba(124,58,237,0.1); color: #a78bfa;        border-color: rgba(124,58,237,0.3); }
+  .chip.red    { background: rgba(239,68,68,0.1);  color: var(--error);   border-color: rgba(239,68,68,0.3); }
+
+  /* RELEASE DONUT */
+  .release-wrap { display: flex; align-items: center; gap: 20px; }
+  .donut-svg { flex-shrink: 0; }
+  .donut-legend { flex: 1; }
+  .donut-legend .leg-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }
+  .donut-legend .leg-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* LOG TABLE */
+  .log-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-top: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  thead th { background: rgba(0,0,0,0.3); padding: 10px 14px; text-align: left; font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody td { padding: 9px 14px; color: var(--text); vertical-align: middle; }
+  tbody td.mono { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); }
+  tbody td a { color: var(--accent); text-decoration: none; }
+
+  .refresh-btn { display: flex; align-items: center; gap: 7px; background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 7px 16px; border-radius: 7px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
+  .refresh-btn:hover { background: rgba(0,229,255,0.1); }
+  .refresh-btn.spinning svg { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  footer { text-align: center; padding: 20px; font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 24px; }
+
+  @media (max-width: 900px) {
+    .stat-grid.cols-5, .stat-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
+    .stat-grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo-block">
+      <h1>Logistics <span>Monitor</span></h1>
+      <p>SMH26 · Container · CHB · Hourly Sync</p>
+    </div>
+    <div class="header-right">
+      <div class="status-pill idle" id="statusPill"><div class="dot"></div><span id="statusText">Not configured</span></div>
+      <span id="lastChecked">—</span>
+      <button class="refresh-btn" id="refreshBtn" onclick="loadData()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+        </svg>
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  <div class="config-banner" id="configBanner">
+    <h3>⚙️ Connect Web App</h3>
+    <p>Paste your Apps Script Web App URL below. Get it from <code>Deploy → Manage Deployments</code> in Apps Script.</p>
+    <div class="config-row">
+      <input type="text" id="webAppUrl" placeholder="https://script.google.com/macros/s/.../exec" />
+      <button onclick="saveUrl()">Connect</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SHIPMENT (SMH26) ═══════════════ -->
+  <div class="section-header">
+    <h2>🚢 Shipments (SMH26)</h2>
+    <div class="line"></div>
+    <div class="tag" id="smh26Tag">—</div>
+  </div>
+
+  <div class="stat-grid cols-5" id="smh26Stats">
+    <div class="kpi-card" style="--card-color:var(--accent)"><div class="kpi-label">Total Shipments</div><div class="kpi-value" id="smh26Total">—</div><div class="kpi-sub">all records</div></div>
+    <div class="kpi-card" style="--card-color:var(--new)"><div class="kpi-label">This Month</div><div class="kpi-value" id="smh26Month">—</div><div class="kpi-sub">opened this month</div></div>
+    <div class="kpi-card" style="--card-color:#a78bfa"><div class="kpi-label">Importers</div><div class="kpi-value" id="smh26Importers">—</div><div class="kpi-sub">unique</div></div>
+    <div class="kpi-card" style="--card-color:var(--accent2)"><div class="kpi-label">Total Duty Billed</div><div class="kpi-value sm" id="smh26Duty">—</div><div class="kpi-sub">USD</div></div>
+    <div class="kpi-card" style="--card-color:var(--updated)"><div class="kpi-label">Total MPF</div><div class="kpi-value sm" id="smh26MPF">—</div><div class="kpi-sub">merchandise processing</div></div>
+  </div>
+
+  <div class="stat-grid cols-2" style="margin-top:12px">
+    <div class="wide-card">
+      <h4>Top Importers</h4>
+      <ul class="bar-list" id="smh26ImporterBars" style="--bar-color:var(--accent)"></ul>
+    </div>
+    <div class="wide-card">
+      <h4>Top Discharge Ports</h4>
+      <ul class="bar-list" id="smh26PortBars" style="--bar-color:#a78bfa"></ul>
+    </div>
+  </div>
+
+  <!-- ═══════════════ CONTAINERS ═══════════════ -->
+  <div class="section-header">
+    <h2>📦 Containers</h2>
+    <div class="line"></div>
+    <div class="tag" id="containerTag">—</div>
+  </div>
+
+  <div class="stat-grid cols-5">
+    <div class="kpi-card" style="--card-color:var(--accent2)"><div class="kpi-label">Total Containers</div><div class="kpi-value" id="ctnTotal">—</div><div class="kpi-sub">all records</div></div>
+    <div class="kpi-card" style="--card-color:var(--accent)"><div class="kpi-label">Total Volume</div><div class="kpi-value sm" id="ctnCBM">—</div><div class="kpi-sub">CBM</div></div>
+    <div class="kpi-card" style="--card-color:var(--new)"><div class="kpi-label">Total Weight</div><div class="kpi-value sm" id="ctnWeight">—</div><div class="kpi-sub">lbs</div></div>
+    <div class="kpi-card" style="--card-color:var(--updated)"><div class="kpi-label">Total Pieces</div><div class="kpi-value sm" id="ctnPieces">—</div><div class="kpi-sub">units</div></div>
+    <div class="kpi-card" style="--card-color:#a78bfa"><div class="kpi-label">Container Types</div><div class="kpi-value sm" id="ctnTypes" style="font-size:13px;padding-top:6px">—</div><div class="kpi-sub">breakdown</div></div>
+  </div>
+
+  <div class="stat-grid cols-2" style="margin-top:12px">
+    <div class="wide-card">
+      <h4>Status Breakdown</h4>
+      <div class="chip-list" id="ctnStatuses"></div>
+    </div>
+    <div class="wide-card">
+      <h4>Top Cargo Contents</h4>
+      <ul class="bar-list" id="ctnContentBars" style="--bar-color:var(--accent2)"></ul>
+    </div>
+  </div>
+
+  <!-- ═══════════════ CHB ENTRIES ═══════════════ -->
+  <div class="section-header">
+    <h2>📋 CHB Entries</h2>
+    <div class="line"></div>
+    <div class="tag" id="chbTag">—</div>
+  </div>
+
+  <div class="stat-grid cols-4">
+    <div class="kpi-card" style="--card-color:var(--accent4)"><div class="kpi-label">Total Entries</div><div class="kpi-value" id="chbTotal">—</div><div class="kpi-sub">all line items</div></div>
+    <div class="kpi-card" style="--card-color:var(--new)"><div class="kpi-label">Released</div><div class="kpi-value" id="chbReleased">—</div><div class="kpi-sub">cargo released</div></div>
+    <div class="kpi-card" style="--card-color:var(--error)"><div class="kpi-label">Pending Release</div><div class="kpi-value" id="chbPending">—</div><div class="kpi-sub">awaiting release</div></div>
+    <div class="kpi-card" style="--card-color:var(--accent2)"><div class="kpi-label">Avg Duty Rate</div><div class="kpi-value sm" id="chbAvgDuty">—</div><div class="kpi-sub">value duty rate %</div></div>
+  </div>
+
+  <div class="stat-grid cols-3" style="margin-top:12px">
+    <div class="wide-card">
+      <h4>Total CHB Duty</h4>
+      <div style="font-size:28px;font-weight:800;color:var(--accent4);margin:8px 0" id="chbDutyBig">—</div>
+      <div style="font-size:11px;color:var(--muted)">Liquidated: <span id="chbLiqDuty" style="color:var(--text)">—</span></div>
+    </div>
+    <div class="wide-card">
+      <h4>Top Countries of Origin</h4>
+      <ul class="bar-list" id="chbCountryBars" style="--bar-color:var(--accent4)"></ul>
+    </div>
+    <div class="wide-card">
+      <h4>Release Status</h4>
+      <div class="release-wrap" id="releaseWrap">
+        <svg class="donut-svg" width="90" height="90" viewBox="0 0 90 90">
+          <circle cx="45" cy="45" r="35" fill="none" stroke="var(--border)" stroke-width="10"/>
+          <circle id="donutReleased" cx="45" cy="45" r="35" fill="none" stroke="var(--new)" stroke-width="10"
+            stroke-dasharray="0 220" stroke-dashoffset="55" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .8s ease"/>
+          <circle id="donutPending" cx="45" cy="45" r="35" fill="none" stroke="var(--error)" stroke-width="10"
+            stroke-dasharray="0 220" stroke-dashoffset="55" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .8s ease"/>
+        </svg>
+        <div class="donut-legend">
+          <div class="leg-item"><div class="leg-dot" style="background:var(--new)"></div><span style="font-size:12px">Released: <strong id="donutRelLabel">—</strong></span></div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--error)"></div><span style="font-size:12px">Pending: <strong id="donutPendLabel">—</strong></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ ACTIVITY LOG ═══════════════ -->
+  <div class="section-header" style="margin-top:32px">
+    <h2>📜 Activity Log</h2>
+    <div class="line"></div>
+  </div>
+  <div class="log-wrap">
+    <table>
+      <thead><tr><th>Timestamp</th><th>Event</th><th>Folder</th><th>File</th><th>Link</th></tr></thead>
+      <tbody id="logBody">
+        <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:28px;font-family:'Space Mono',monospace;font-size:11px">Connect to see activity</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>Logistics Monitor · SMH26 · Container · CHB · Auto-refreshes every 60s</footer>
+</div>
+
+<script>
+var webAppUrl = "https://script.google.com/macros/s/AKfycbwGhNtW5dEKIGPTXNXgo7JswcH4MZofQtl9VATf93YiIT_e7YRHGQojsnS0TVc7x9S8fA/exec";
+var timer = null;
+
+window.onload = function() {
+  document.getElementById("configBanner").style.display = "none";
+  loadData();
+  startTimer();
+};
+
+function startTimer() {
+  if (timer) clearInterval(timer);
+  timer = setInterval(loadData, 60000);
+}
+
+function loadData() {
+  if (!webAppUrl) return;
+  var btn = document.getElementById("refreshBtn");
+  btn.classList.add("spinning");
+  setStatus("idle", "Syncing…");
+
+  fetch(webAppUrl)
+    .then(function(r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(function(data) {
+      if (!data.ok) throw new Error("Script error");
+      renderAll(data);
+      document.getElementById("lastChecked").textContent = "Last refreshed: " + new Date().toLocaleTimeString();
+      setStatus("active", "Live · hourly sync");
+    })
+    .catch(function(e) {
+      setStatus("error", "Connection error");
+      document.getElementById("lastChecked").textContent = "Error: " + e.message;
+    })
+    .finally(function() { btn.classList.remove("spinning"); });
+}
+
+function renderAll(data) {
+  var k = data.kpi || {};
+
+  // ── SMH26
+  set("smh26Total",     fmt(k.smh26_total_shipments));
+  set("smh26Month",     fmt(k.smh26_shipments_this_month));
+  set("smh26Importers", fmt(k.smh26_unique_importers));
+  set("smh26Duty",      money(k.smh26_total_duty_billed));
+  set("smh26MPF",       money(k.smh26_total_mpf));
+  set("smh26Tag",       (k.smh26_total_shipments || "—") + " total records");
+  renderBars("smh26ImporterBars", k.smh26_top_importers);
+  renderBars("smh26PortBars",     k.smh26_top_ports);
+
+  // ── Container
+  set("ctnTotal",   fmt(k.container_total));
+  set("ctnCBM",     num(k.container_total_cbm, 0) + " CBM");
+  set("ctnWeight",  num(k.container_total_weight_lbs, 0) + " lbs");
+  set("ctnPieces",  fmt(k.container_total_pieces));
+  set("ctnTag",     (k.container_total || "—") + " total records");
+
+  // Container types inline
+  var ctypes = parseTopN(k.container_types);
+  set("ctnTypes", ctypes.map(function(i){ return i.label + " (" + i.count + ")"; }).join(" · ") || "—");
+
+  renderChips("ctnStatuses", parseTopN(k.container_statuses));
+  renderBars("ctnContentBars", k.container_top_contents);
+
+  // ── CHB
+  var released = parseInt(k.chb_released_count) || 0;
+  var pending  = parseInt(k.chb_pending_count)  || 0;
+  var total    = released + pending;
+
+  set("chbTotal",    fmt(k.chb_total_entries));
+  set("chbReleased", fmt(released));
+  set("chbPending",  fmt(pending));
+  set("chbAvgDuty",  num(k.chb_avg_duty_rate, 1) + "%");
+  set("chbDutyBig",  money(k.chb_total_duty));
+  set("chbLiqDuty",  money(k.chb_liquidated_duty));
+  set("chbTag",      (k.chb_total_entries || "—") + " total records");
+  set("donutRelLabel",  released.toLocaleString());
+  set("donutPendLabel", pending.toLocaleString());
+
+  renderBars("chbCountryBars", k.chb_top_countries);
+  renderDonut(released, pending, total);
+
+  // ── Log
+  renderLog(data.log || []);
+}
+
+// ── Donut chart
+function renderDonut(released, pending, total) {
+  if (!total) return;
+  var circ = 2 * Math.PI * 35; // ~220
+  var relDash = (released / total) * circ;
+  var penDash = (pending  / total) * circ;
+  var relEl = document.getElementById("donutReleased");
+  var penEl = document.getElementById("donutPending");
+  relEl.setAttribute("stroke-dasharray", relDash + " " + circ);
+  relEl.setAttribute("stroke-dashoffset", circ / 4);
+  penEl.setAttribute("stroke-dasharray", penDash + " " + circ);
+  penEl.setAttribute("stroke-dashoffset", (circ / 4) - relDash);
+}
+
+// ── Bar list (parses "label:count|label:count" string)
+function renderBars(id, str) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var items = parseTopN(str);
+  if (!items.length) { el.innerHTML = '<li style="color:var(--muted);font-size:11px">No data yet</li>'; return; }
+  var max = items[0].count;
+  el.innerHTML = items.map(function(item) {
+    var pct = max > 0 ? (item.count / max * 100).toFixed(0) : 0;
+    return '<li>' +
+      '<span class="bar-label" title="' + item.label + '">' + item.label + '</span>' +
+      '<span class="bar-track"><span class="bar-fill" style="width:' + pct + '%"></span></span>' +
+      '<span class="bar-count">' + item.count + '</span></li>';
+  }).join("");
+}
+
+// ── Chips
+function renderChips(id, items) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var colors = ["cyan","green","orange","purple","red"];
+  if (!items.length) { el.innerHTML = '<span class="chip cyan">No data</span>'; return; }
+  el.innerHTML = items.map(function(item, i) {
+    return '<span class="chip ' + (colors[i % colors.length]) + '">' + item.label + ' · ' + item.count + '</span>';
+  }).join("");
+}
+
+// ── Log table
+function renderLog(log) {
+  var tbody = document.getElementById("logBody");
+  if (!log.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;font-family:Space Mono,monospace;font-size:11px">No activity yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = log.slice(0,40).map(function(row) {
+    var ev    = row["Event"] || "";
+    var color = ev.includes("NEW") ? "var(--new)" : ev.includes("UPDATED") ? "var(--updated)" : ev.includes("ERROR") ? "var(--error)" : "var(--muted)";
+    return '<tr>' +
+      '<td class="mono">' + (row["Timestamp"]||"—") + '</td>' +
+      '<td><span style="color:' + color + ';font-family:Space Mono,monospace;font-size:10px">' + ev + '</span></td>' +
+      '<td class="mono">' + (row["Folder"]||"—") + '</td>' +
+      '<td>' + (row["Details"]||"—") + '</td>' +
+      '<td>' + (row["URL"] ? '<a href="' + row["URL"] + '" target="_blank">↗</a>' : "—") + '</td></tr>';
+  }).join("");
+}
+
+// ── Helpers
+function parseTopN(str) {
+  if (!str) return [];
+  return str.toString().split("|").filter(Boolean).map(function(s) {
+    var parts = s.split(":");
+    var count = parseInt(parts.pop()) || 0;
+    return { label: parts.join(":").trim(), count: count };
+  }).filter(function(i){ return i.label; });
+}
+function set(id, val) { var el = document.getElementById(id); if (el) el.textContent = val !== undefined && val !== null ? val : "—"; }
+function fmt(v)  { return v !== undefined && v !== null && v !== "" ? parseInt(v).toLocaleString() : "—"; }
+function num(v, dec) { var n = parseFloat(v); return isNaN(n) ? "—" : n.toLocaleString(undefined, {minimumFractionDigits: dec, maximumFractionDigits: dec}); }
+function money(v) { var n = parseFloat(v); return isNaN(n) || n === 0 ? "$0" : "$" + n.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function setStatus(state, text) {
+  var pill = document.getElementById("statusPill");
+  pill.className = "status-pill " + (state === "active" ? "" : state);
+  document.getElementById("statusText").textContent = text;
+}
+</script>
+</body>
+</html>
+t="width=device-width, initial-scale=1.0">
 <title>Logistics Reports Monitor</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
