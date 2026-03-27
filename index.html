@@ -3,325 +3,445 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Logistics Reports Monitor</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<title>OVLogiPulse · Supply Chain Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <style>
-  :root {
-    --bg:       #0b0c10;
-    --surface:  #13141a;
-    --surface2: #1a1b23;
-    --border:   #1e2030;
-    --accent:   #00e5ff;
-    --accent2:  #ff6b35;
-    --accent3:  #7c3aed;
-    --accent4:  #10b981;
-    --text:     #e2e8f0;
-    --muted:    #64748b;
-    --new:      #10b981;
-    --updated:  #f59e0b;
-    --error:    #ef4444;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; }
-  body::before {
-    content: ''; position: fixed; inset: 0;
-    background-image: linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
-    background-size: 40px 40px; pointer-events: none; z-index: 0;
-  }
-  .container { position: relative; z-index: 1; max-width: 1500px; margin: 0 auto; padding: 28px 24px; }
+:root {
+  --bg:        #f0f4f8;
+  --bg2:       #e8eef4;
+  --surface:   #ffffff;
+  --surface2:  #f7fafc;
+  --border:    #dde3ea;
+  --border2:   #c8d3dd;
+  --navy:      #0f2342;
+  --navy2:     #1a3a5c;
+  --ocean:     #1565c0;
+  --ocean2:    #1976d2;
+  --teal:      #00796b;
+  --amber:     #e65100;
+  --green:     #2e7d32;
+  --red:       #c62828;
+  --text:      #1a2332;
+  --text2:     #3d5166;
+  --muted:     #6b7f96;
+  --accent:    #1565c0;
+  --shadow:    0 1px 3px rgba(15,35,66,0.08), 0 4px 12px rgba(15,35,66,0.05);
+  --shadow-md: 0 4px 16px rgba(15,35,66,0.12), 0 1px 4px rgba(15,35,66,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* HEADER */
-  header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
-  .logo-block h1 { font-size: 26px; font-weight: 800; color: #fff; line-height: 1; }
-  .logo-block h1 span { color: var(--accent); }
-  .logo-block p { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 5px; letter-spacing: 2px; text-transform: uppercase; }
-  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-  .header-buttons { display: flex; gap: 8px; }
-  .status-pill { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); padding: 5px 13px; border-radius: 100px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
-  .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--new); animation: pulse 2s ease-in-out infinite; }
-  .status-pill.error .dot { background: var(--error); animation: none; }
-  .status-pill.idle  .dot { background: var(--muted); animation: none; }
-  @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(16,185,129,0.4);}50%{opacity:.7;box-shadow:0 0 0 6px rgba(16,185,129,0);} }
-  #lastChecked { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+}
 
+/* TOPBAR */
+.topbar {
+  background: var(--navy);
+  color: #fff;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.topbar-brand { display: flex; align-items: center; gap: 12px; }
+.topbar-logo {
+  width: 32px; height: 32px;
+  background: var(--ocean);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.topbar-brand h1 { font-family: 'DM Serif Display', serif; font-size: 20px; color: #fff; letter-spacing: -0.3px; }
+.topbar-brand h1 span { color: #64b5f6; }
+.topbar-sub { font-size: 11px; color: rgba(255,255,255,0.45); font-family: 'IBM Plex Mono', monospace; letter-spacing: 1px; margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.status-pill {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 5px 12px; border-radius: 100px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.7);
+}
+.status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: #4caf50; animation: pulse 2s ease-in-out infinite; }
+.status-pill.error .dot { background: #ef5350; animation: none; }
+.status-pill.idle  .dot { background: rgba(255,255,255,0.3); animation: none; }
+@keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(76,175,80,0.5);}50%{opacity:.7;box-shadow:0 0 0 5px rgba(76,175,80,0);} }
+#lastChecked { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.4); }
+.btn-topbar {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  color: #fff; padding: 6px 14px; border-radius: 6px;
+  font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: background .2s;
+}
+.btn-topbar:hover { background: rgba(255,255,255,0.18); }
+.btn-topbar.spinning svg { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.btn-customize { background: rgba(21,101,192,0.5); border-color: rgba(100,181,246,0.4); }
+.btn-customize:hover { background: rgba(21,101,192,0.7); }
 
+/* MAIN LAYOUT */
+.shell { display: flex; min-height: calc(100vh - 56px); }
 
-  /* SECTION HEADERS */
-  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; margin-top: 28px; }
-  .section-header h2 { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 3px; white-space: nowrap; }
-  .section-header .line { flex: 1; height: 1px; background: var(--border); }
-  .section-header .tag { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 2px 8px; border-radius: 4px; }
+/* SIDEBAR NAV */
+.sidebar {
+  width: 220px; flex-shrink: 0;
+  background: var(--navy2);
+  padding: 24px 0;
+  position: sticky; top: 56px; height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+.sidebar-section { padding: 0 16px; margin-bottom: 24px; }
+.sidebar-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 2px; padding: 0 4px; margin-bottom: 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 8px;
+  font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.65);
+  cursor: pointer; transition: all .15s; margin-bottom: 2px;
+  text-decoration: none;
+}
+.nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.nav-item.active { background: var(--ocean); color: #fff; }
+.nav-item .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+.nav-badge {
+  margin-left: auto; background: var(--amber); color: #fff;
+  font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 100px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.nav-badge.green { background: var(--green); }
 
-  /* STAT GRID */
-  .stat-grid { display: grid; gap: 12px; }
-  .stat-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
-  .stat-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
-  .stat-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
-  .stat-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+/* MAIN CONTENT */
+.main { flex: 1; padding: 28px 28px 40px; min-width: 0; }
 
-  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; position: relative; overflow: hidden; transition: border-color .2s, transform .15s; }
-  .kpi-card:hover { border-color: var(--card-color, var(--accent)); transform: translateY(-1px); }
-  .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: var(--card-color, var(--accent)); }
-  .kpi-card .kpi-label { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
-  .kpi-card .kpi-value { font-size: 30px; font-weight: 800; color: var(--card-color, var(--accent)); line-height: 1; }
-  .kpi-card .kpi-value.sm { font-size: 18px; padding-top: 4px; }
-  .kpi-card .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 5px; }
+/* SECTION TITLE */
+.section-title {
+  font-size: 13px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 2.5px;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px; margin-top: 32px;
+}
+.section-title:first-child { margin-top: 0; }
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.section-tag {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--muted); padding: 2px 8px; border-radius: 4px;
+}
 
-  /* WIDE CARDS */
-  .wide-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
-  .wide-card h4 { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+/* KPI CARDS */
+.kpi-grid { display: grid; gap: 14px; }
+.kpi-grid.cols-5 { grid-template-columns: repeat(5,1fr); }
+.kpi-grid.cols-4 { grid-template-columns: repeat(4,1fr); }
+.kpi-grid.cols-3 { grid-template-columns: repeat(3,1fr); }
+.kpi-grid.cols-2 { grid-template-columns: repeat(2,1fr); }
 
-  .bar-list { list-style: none; }
-  .bar-list li { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; }
-  .bar-list li:last-child { margin-bottom: 0; }
-  .bar-list .bar-label { min-width: 140px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
-  .bar-list .bar-track { flex: 1; background: rgba(255,255,255,0.05); border-radius: 3px; height: 6px; overflow: hidden; }
-  .bar-list .bar-fill  { height: 100%; border-radius: 3px; background: var(--bar-color, var(--accent)); }
-  .bar-list .bar-count { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); min-width: 30px; text-align: right; }
+.kpi-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px 20px;
+  box-shadow: var(--shadow); position: relative; overflow: hidden;
+  transition: box-shadow .2s, transform .15s;
+}
+.kpi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: var(--card-color, var(--ocean)); border-radius: 12px 12px 0 0; }
+.kpi-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+.kpi-value { font-size: 32px; font-weight: 700; color: var(--card-color, var(--navy)); line-height: 1; }
+.kpi-value.sm { font-size: 20px; padding-top: 4px; }
+.kpi-sub { font-size: 11px; color: var(--muted); margin-top: 5px; }
 
-  /* BADGE CHIPS */
-  .chip-list { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { padding: 3px 10px; border-radius: 100px; font-family: 'Space Mono', monospace; font-size: 10px; border: 1px solid; }
-  .chip.green  { background: rgba(16,185,129,0.1); color: var(--new);     border-color: rgba(16,185,129,0.3); }
-  .chip.orange { background: rgba(245,158,11,0.1); color: var(--updated); border-color: rgba(245,158,11,0.3); }
-  .chip.cyan   { background: rgba(0,229,255,0.1);  color: var(--accent);  border-color: rgba(0,229,255,0.3); }
-  .chip.purple { background: rgba(124,58,237,0.1); color: #a78bfa;        border-color: rgba(124,58,237,0.3); }
-  .chip.red    { background: rgba(239,68,68,0.1);  color: var(--error);   border-color: rgba(239,68,68,0.3); }
+/* WIDE CARDS */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow);
+}
+.card h4 { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
 
-  /* RELEASE DONUT */
-  .release-wrap { display: flex; align-items: center; gap: 20px; }
-  .donut-svg { flex-shrink: 0; }
-  .donut-legend { flex: 1; }
-  .donut-legend .leg-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }
-  .donut-legend .leg-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+/* BAR LIST */
+.bar-list { list-style: none; }
+.bar-list li { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; font-size: 12px; }
+.bar-list li:last-child { margin-bottom: 0; }
+.bar-label { min-width: 140px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+.bar-track { flex: 1; background: var(--bg2); border-radius: 3px; height: 6px; overflow: hidden; }
+.bar-fill  { height: 100%; border-radius: 3px; background: var(--bar-color, var(--ocean)); }
+.bar-count { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); min-width: 30px; text-align: right; }
 
+/* CHIPS */
+.chip-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 4px 10px; border-radius: 100px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; border: 1px solid; font-weight: 600; }
+.chip.blue   { background: #e3f2fd; color: #1565c0; border-color: #90caf9; }
+.chip.green  { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+.chip.orange { background: #fff3e0; color: #e65100; border-color: #ffcc80; }
+.chip.teal   { background: #e0f2f1; color: #00796b; border-color: #80cbc4; }
+.chip.red    { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
 
+/* DONUT */
+.release-wrap { display: flex; align-items: center; gap: 20px; }
+.donut-svg { flex-shrink: 0; }
+.leg-item { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px; color: var(--text2); }
+.leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
-  .refresh-btn { display: flex; align-items: center; gap: 7px; background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 7px 16px; border-radius: 7px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
-  .refresh-btn:hover { background: rgba(0,229,255,0.1); }
-  .refresh-btn.spinning svg { animation: spin 1s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* ═══════════ MAP SECTION ═══════════ */
+.map-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: var(--shadow); overflow: hidden;
+}
+.map-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+}
+.map-header h3 { font-family: 'DM Serif Display', serif; font-size: 16px; color: #fff; }
+.map-header p  { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+.map-legend { display: flex; gap: 16px; align-items: center; }
+.map-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: rgba(255,255,255,0.7); }
+.map-legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+#mapContainer { position: relative; background: #d4e8f5; height: 420px; }
+#mapSvg { width: 100%; height: 100%; }
+.map-tooltip {
+  position: absolute; background: var(--navy); color: #fff;
+  padding: 8px 12px; border-radius: 8px; font-size: 12px;
+  pointer-events: none; opacity: 0; transition: opacity .15s;
+  max-width: 200px; z-index: 10;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.map-tooltip strong { display: block; margin-bottom: 3px; color: #64b5f6; }
 
-  .customize-btn { display: flex; align-items: center; gap: 7px; background: transparent; border: 1px solid var(--accent3); color: #a78bfa; padding: 7px 16px; border-radius: 7px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
-  .customize-btn:hover { background: rgba(124,58,237,0.1); }
+/* FILTER BAR */
+.filter-bar {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;
+  display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
+  box-shadow: var(--shadow);
+}
+.filter-group { display: flex; flex-direction: column; gap: 5px; }
+.filter-group label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+.filter-group input, .filter-group select {
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text); padding: 7px 12px; border-radius: 7px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; outline: none;
+  transition: border-color .2s; min-width: 160px;
+}
+.filter-group input:focus, .filter-group select:focus { border-color: var(--ocean); }
+.filter-btn { padding: 8px 18px; border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all .2s; }
+.filter-btn.apply { background: var(--navy); color: #fff; }
+.filter-btn.apply:hover { background: var(--ocean); }
+.filter-btn.clear { background: transparent; border: 1px solid var(--border2); color: var(--muted); }
+.filter-btn.clear:hover { border-color: var(--ocean); color: var(--ocean); }
+.filter-results-count { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); align-self: center; margin-left: auto; }
 
-  /* DRAWER */
-  .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; backdrop-filter: blur(2px); }
-  .drawer-overlay.open { display: block; }
-  .drawer { position: fixed; top: 0; right: -380px; width: 360px; height: 100vh; background: var(--surface); border-left: 1px solid var(--border); z-index: 101; transition: right .3s cubic-bezier(.4,0,.2,1); overflow-y: auto; }
-  .drawer.open { right: 0; }
-  .drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 14px; position: sticky; top: 0; background: var(--surface); z-index: 1; }
-  .drawer-close { background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: color .2s; }
-  .drawer-close:hover { color: var(--text); }
-  .drawer-body { padding: 20px 24px; }
-  .drawer-section { margin-bottom: 24px; }
-  .drawer-section-title { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.04); cursor: pointer; font-size: 13px; color: var(--text); }
-  .toggle-row:last-of-type { border-bottom: none; }
-  .toggle-row input[type="checkbox"] { appearance: none; width: 36px; height: 20px; background: var(--border); border-radius: 100px; position: relative; cursor: pointer; transition: background .2s; flex-shrink: 0; }
-  .toggle-row input[type="checkbox"]:checked { background: var(--accent3); }
-  .toggle-row input[type="checkbox"]::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:left .2s; }
-  .toggle-row input[type="checkbox"]:checked::after { left:18px; }
-  .drawer-reset { width: 100%; padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 7px; font-family: 'Syne', sans-serif; font-size: 12px; cursor: pointer; margin-top: 8px; transition: all .2s; }
-  .drawer-reset:hover { border-color: var(--accent); color: var(--accent); }
+/* SEARCH BAR */
+.search-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
+.search-bar input {
+  flex: 1; background: var(--surface); border: 1px solid var(--border2);
+  color: var(--text); padding: 10px 16px; border-radius: 8px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px; outline: none;
+  transition: border-color .2s; box-shadow: var(--shadow);
+}
+.search-bar input:focus { border-color: var(--ocean); }
+.search-bar button { padding: 10px 22px; background: var(--navy); color: #fff; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .2s; }
+.search-bar button:hover { background: var(--ocean); }
 
-  [data-panel].hidden { display: none !important; }
+/* TODAY BADGE */
+.today-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #e8f5e9; border: 1px solid #a5d6a7;
+  color: var(--green); padding: 4px 12px; border-radius: 100px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;
+}
 
-  /* FILTER BAR */
-  .filter-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-  .filter-group { display: flex; flex-direction: column; gap: 5px; }
-  .filter-group label { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
-  .filter-group input, .filter-group select { background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text); padding: 7px 12px; border-radius: 7px; font-family: 'Space Mono', monospace; font-size: 11px; outline: none; transition: border-color .2s; min-width: 160px; }
-  .filter-group input:focus, .filter-group select:focus { border-color: var(--accent); }
-  .filter-group select option { background: var(--surface); }
-  .filter-btn { padding: 7px 16px; border-radius: 7px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all .2s; }
-  .filter-btn.apply { background: var(--accent3); color: #fff; }
-  .filter-btn.apply:hover { background: #6d28d9; }
-  .filter-btn.clear  { background: transparent; border: 1px solid var(--border); color: var(--muted); }
-  .filter-btn.clear:hover  { border-color: var(--accent); color: var(--accent); }
-  .filter-results-count { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); align-self: center; margin-left: auto; }
+/* SHIP TABLE */
+.ship-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: auto; max-height: 400px; box-shadow: var(--shadow); }
+.ship-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px; }
+.ship-table thead th {
+  background: var(--navy); color: rgba(255,255,255,0.8);
+  padding: 10px 14px; text-align: left;
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+  text-transform: uppercase; letter-spacing: 1px;
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+  position: sticky; top: 0; z-index: 1;
+}
+.ship-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+.ship-table tbody tr:hover { background: #e3f2fd; }
+.ship-table tbody tr:last-child { border-bottom: none; }
+.ship-table tbody td { padding: 9px 14px; color: var(--text); vertical-align: middle; white-space: nowrap; }
+.ship-table .mono { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); }
+.ship-table .release-today { color: var(--green); font-weight: 700; }
+.ship-table .isf-match   { color: var(--green); font-weight: 600; }
+.ship-table .isf-nomatch { color: var(--amber); font-weight: 600; }
+.ship-table .no-data { text-align: center; color: var(--muted); padding: 32px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+.ref-link { color: var(--ocean); font-weight: 600; text-decoration: none; cursor: pointer; }
+.ref-link:hover { text-decoration: underline; }
 
-  /* SEARCH BAR */
-  .search-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
-  .search-bar input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text); padding: 10px 16px; border-radius: 8px; font-family: 'Space Mono', monospace; font-size: 12px; outline: none; transition: border-color .2s; }
-  .search-bar input:focus { border-color: var(--accent); }
-  .search-bar button { padding: 10px 20px; background: var(--accent); color: #000; border: none; border-radius: 8px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity .2s; }
-  .search-bar button:hover { opacity: 0.85; }
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,35,66,0.6); z-index: 200; backdrop-filter: blur(3px); align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; width: 90%; max-width: 880px;
+  max-height: 88vh; overflow-y: auto; padding: 32px 36px;
+  position: relative; box-shadow: var(--shadow-md);
+}
+.modal-close { position: absolute; top: 20px; right: 24px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); font-size: 16px; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.modal-close:hover { background: var(--border); }
+.modal-hero { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.modal-hero-icon { width: 48px; height: 48px; background: var(--navy); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.modal h3 { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--navy); }
+.modal-sub { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 4px; }
+.modal-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+.mf { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+.mf-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.mf-value { font-size: 13px; color: var(--text); font-weight: 600; word-break: break-word; }
+.mf-value.hi   { color: var(--ocean); }
+.mf-value.good { color: var(--green); }
+.mf-value.warn { color: var(--amber); }
+.modal-section-title { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin: 20px 0 10px; padding-bottom: 7px; border-bottom: 1px solid var(--border); }
 
-  /* TODAY'S RELEASES */
-  .releases-count-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: var(--new); padding: 3px 12px; border-radius: 100px; font-family: 'Space Mono', monospace; font-size: 11px; }
+/* DRAWER */
+.drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(15,35,66,0.4); z-index: 100; }
+.drawer-overlay.open { display: block; }
+.drawer { position: fixed; top: 0; right: -390px; width: 370px; height: 100vh; background: var(--surface); border-left: 1px solid var(--border); z-index: 101; transition: right .3s cubic-bezier(.4,0,.2,1); overflow-y: auto; box-shadow: -4px 0 20px rgba(0,0,0,0.1); }
+.drawer.open { right: 0; }
+.drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 14px; color: var(--navy); position: sticky; top: 0; background: var(--surface); z-index: 1; }
+.drawer-close { background: var(--bg); border: 1px solid var(--border); color: var(--muted); font-size: 14px; cursor: pointer; padding: 5px 9px; border-radius: 6px; }
+.drawer-body { padding: 20px 24px; }
+.drawer-section { margin-bottom: 24px; }
+.drawer-section-title { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--bg2); cursor: pointer; font-size: 13px; color: var(--text2); }
+.toggle-row:last-of-type { border-bottom: none; }
+.toggle-row input[type="checkbox"] { appearance: none; width: 36px; height: 20px; background: var(--border); border-radius: 100px; position: relative; cursor: pointer; transition: background .2s; flex-shrink: 0; }
+.toggle-row input[type="checkbox"]:checked { background: var(--ocean); }
+.toggle-row input[type="checkbox"]::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:left .2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle-row input[type="checkbox"]:checked::after { left:18px; }
+.drawer-reset { width: 100%; padding: 10px; background: transparent; border: 1px solid var(--border2); color: var(--muted); border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; margin-top: 8px; }
+.drawer-reset:hover { border-color: var(--ocean); color: var(--ocean); }
+[data-panel].hidden { display: none !important; }
 
-  /* SHIPMENT TABLE */
-  .ship-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: auto; max-height: 420px; }
-  .ship-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 900px; }
-  .ship-table thead th { background: rgba(0,0,0,0.4); padding: 10px 14px; text-align: left; font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); white-space: nowrap; position: sticky; top: 0; z-index: 1; }
-  .ship-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; }
-  .ship-table tbody tr:hover { background: rgba(0,229,255,0.05); }
-  .ship-table tbody tr:last-child { border-bottom: none; }
-  .ship-table tbody td { padding: 9px 14px; color: var(--text); vertical-align: middle; white-space: nowrap; }
-  .ship-table tbody td.mono { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); }
-  .ship-table .release-today { color: var(--new); font-weight: 700; }
-  .ship-table .isf-match { color: var(--new); }
-  .ship-table .isf-nomatch { color: var(--updated); }
-  .ship-table .no-data { text-align: center; color: var(--muted); padding: 32px; font-family: 'Space Mono', monospace; font-size: 11px; }
+footer { text-align: center; padding: 20px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 8px; }
 
-  /* SHIPMENT DETAIL MODAL */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; backdrop-filter: blur(4px); align-items: center; justify-content: center; }
-  .modal-overlay.open { display: flex; }
-  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 90%; max-width: 860px; max-height: 85vh; overflow-y: auto; padding: 28px 32px; position: relative; }
-  .modal-close { position: absolute; top: 16px; right: 20px; background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
-  .modal-close:hover { color: var(--text); }
-  .modal h3 { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 4px; }
-  .modal .modal-sub { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); margin-bottom: 24px; }
-  .modal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
-  .modal-field { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
-  .modal-field .mf-label { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-  .modal-field .mf-value { font-size: 13px; color: var(--text); font-weight: 600; word-break: break-word; }
-  .modal-field .mf-value.highlight { color: var(--accent); }
-  .modal-field .mf-value.good { color: var(--new); }
-  .modal-field .mf-value.warn { color: var(--updated); }
-  .modal-section-title { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin: 16px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-
-  footer { text-align: center; padding: 20px; font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 24px; }
-
-  @media (max-width: 900px) {
-    .stat-grid.cols-5, .stat-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
-    .stat-grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
-  }
+@media (max-width: 900px) {
+  .kpi-grid.cols-5, .kpi-grid.cols-4 { grid-template-columns: repeat(2,1fr); }
+  .kpi-grid.cols-3 { grid-template-columns: repeat(2,1fr); }
+  .sidebar { display: none; }
+  .main { padding: 16px; }
+}
 </style>
 </head>
 <body>
-<div class="container">
 
-  <header>
-    <div class="logo-block">
-      <h1>Logistics <span>Monitor</span></h1>
-      <p>SMH26 · Container · CHB · Hourly Sync</p>
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-logo">🚢</div>
+    <div>
+      <h1>OV<span>LogiPulse</span></h1>
+      <div class="topbar-sub">SUPPLY CHAIN MONITOR · HOURLY SYNC</div>
     </div>
-    <div class="header-right">
-      <div class="status-pill idle" id="statusPill"><div class="dot"></div><span id="statusText">Not configured</span></div>
-      <span id="lastChecked">—</span>
-      <div class="header-buttons">
-        <button class="refresh-btn" id="refreshBtn" onclick="loadData()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-          </svg>
-          Refresh
-        </button>
-        <button class="customize-btn" onclick="toggleDrawer()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-          </svg>
-          Customize
-        </button>
+  </div>
+  <div class="topbar-right">
+    <div class="status-pill idle" id="statusPill"><div class="dot"></div><span id="statusText">Connecting…</span></div>
+    <span id="lastChecked"></span>
+    <button class="btn-topbar" id="refreshBtn" onclick="loadData()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      Refresh
+    </button>
+    <button class="btn-topbar btn-customize" onclick="toggleDrawer()">⚙ Customize</button>
+  </div>
+</div>
+
+<div class="shell">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Navigation</div>
+    <a class="nav-item active" href="#map-section"><span class="nav-icon">🗺️</span> Global Map</a>
+    <a class="nav-item" href="#releases-section"><span class="nav-icon">📬</span> Today's Releases <span class="nav-badge green" id="sidebarReleaseCount">—</span></a>
+    <a class="nav-item" href="#search-section"><span class="nav-icon">🔍</span> B/L Search</a>
+    <a class="nav-item" href="#filter-section"><span class="nav-icon">⚙</span> Filter Shipments</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">KPI Panels</div>
+    <a class="nav-item" href="#smh26-section"><span class="nav-icon">🚢</span> Shipments</a>
+    <a class="nav-item" href="#ctn-section"><span class="nav-icon">📦</span> Containers</a>
+    <a class="nav-item" href="#chb-section"><span class="nav-icon">📋</span> CHB Entries</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- ══════════ GLOBAL MAP ══════════ -->
+  <div class="section-title" id="map-section">🗺️ Global Shipment Flow</div>
+  <div class="map-card" style="margin-bottom:28px">
+    <div class="map-header">
+      <div>
+        <h3>Origin Countries → US Ports of Discharge</h3>
+        <p>Bubble size = shipment volume · Click a port for details</p>
+      </div>
+      <div class="map-legend">
+        <div class="map-legend-item"><div class="map-legend-dot" style="background:#ff7043"></div> Origin Country</div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background:#1565c0"></div> US Port of Discharge</div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background:rgba(255,193,7,0.8)"></div> Route</div>
       </div>
     </div>
-  </header>
-
-
-
-  <!-- ═══════════════ SHIPMENT (SMH26) ═══════════════ -->
-  <div class="section-header" data-section="smh26">
-    <h2>🚢 Shipments (SMH26)</h2>
-    <div class="line"></div>
-    <div class="tag" id="smh26Tag">—</div>
-  </div>
-
-  <div class="stat-grid cols-5" id="smh26Stats" data-section="smh26">
-    <div class="kpi-card" style="--card-color:var(--accent)" data-panel="smh26_total"><div class="kpi-label">Total Shipments</div><div class="kpi-value" id="smh26Total">—</div><div class="kpi-sub">all records</div></div>
-    <div class="kpi-card" style="--card-color:var(--new)" data-panel="smh26_month"><div class="kpi-label">This Month</div><div class="kpi-value" id="smh26Month">—</div><div class="kpi-sub">opened this month</div></div>
-    <div class="kpi-card" style="--card-color:#a78bfa" data-panel="smh26_importers"><div class="kpi-label">Importers</div><div class="kpi-value" id="smh26Importers">—</div><div class="kpi-sub">unique</div></div>
-    <div class="kpi-card" style="--card-color:var(--accent2)" data-panel="smh26_duty"><div class="kpi-label">Total Duty Billed</div><div class="kpi-value sm" id="smh26Duty">—</div><div class="kpi-sub">USD</div></div>
-    <div class="kpi-card" style="--card-color:var(--updated)" data-panel="smh26_mpf"><div class="kpi-label">Total MPF</div><div class="kpi-value sm" id="smh26MPF">—</div><div class="kpi-sub">merchandise processing</div></div>
-  </div>
-
-  <div class="stat-grid cols-1" style="margin-top:12px">
-    <div class="wide-card" data-panel="smh26_ports">
-      <h4>Top Discharge Ports</h4>
-      <ul class="bar-list" id="smh26PortBars" style="--bar-color:#a78bfa"></ul>
+    <div id="mapContainer">
+      <svg id="mapSvg"></svg>
+      <div class="map-tooltip" id="mapTooltip"></div>
     </div>
   </div>
 
-  <!-- ═══════════════ CONTAINERS ═══════════════ -->
-  <div class="section-header" data-section="container">
-    <h2>📦 Containers</h2>
-    <div class="line"></div>
-    <div class="tag" id="containerTag">—</div>
+  <!-- ══════════ TODAY'S RELEASES ══════════ -->
+  <div class="section-title" id="releases-section">
+    📬 Today's Cargo Releases
+    <span class="today-badge"><span id="todayReleaseCount">—</span> shipments</span>
+  </div>
+  <div class="ship-table-wrap" style="margin-bottom:28px">
+    <table class="ship-table">
+      <thead><tr>
+        <th>Ref No</th><th>Entry No</th><th>Importer</th><th>Shipper</th>
+        <th>Release Date</th><th>ETA</th><th>Port</th>
+        <th>ISF Bill Match</th><th>ISF No Bill Match</th>
+        <th>Containers</th><th>Duty Billed</th>
+      </tr></thead>
+      <tbody id="todayReleasesBody"><tr><td colspan="11" class="no-data">Loading…</td></tr></tbody>
+    </table>
   </div>
 
-  <div class="stat-grid cols-5" data-section="container">
-    <div class="kpi-card" style="--card-color:var(--accent2)" data-panel="ctn_total"><div class="kpi-label">Total Containers</div><div class="kpi-value" id="ctnTotal">—</div><div class="kpi-sub">all records</div></div>
-    <div class="kpi-card" style="--card-color:var(--accent)" data-panel="ctn_cbm"><div class="kpi-label">Total Volume</div><div class="kpi-value sm" id="ctnCBM">—</div><div class="kpi-sub">CBM</div></div>
-    <div class="kpi-card" style="--card-color:var(--new)" data-panel="ctn_weight"><div class="kpi-label">Total Weight</div><div class="kpi-value sm" id="ctnWeight">—</div><div class="kpi-sub">lbs</div></div>
-    <div class="kpi-card" style="--card-color:var(--updated)" data-panel="ctn_pieces"><div class="kpi-label">Total Pieces</div><div class="kpi-value sm" id="ctnPieces">—</div><div class="kpi-sub">units</div></div>
-    <div class="kpi-card" style="--card-color:#a78bfa" data-panel="ctn_types"><div class="kpi-label">Container Types</div><div class="kpi-value sm" id="ctnTypes" style="font-size:13px;padding-top:6px">—</div><div class="kpi-sub">breakdown</div></div>
+  <!-- ══════════ B/L SEARCH ══════════ -->
+  <div class="section-title" id="search-section">🔍 Search by House B/L Number</div>
+  <div class="search-bar">
+    <input type="text" id="blSearchInput" placeholder="Enter House B/L Number (e.g. 2026000168)" onkeydown="if(event.key==='Enter') searchBL()">
+    <button onclick="searchBL()">Search</button>
   </div>
-
-  <div class="stat-grid cols-2" style="margin-top:12px" data-section="container">
-    <div class="wide-card" data-panel="ctn_statuses">
-      <h4>Status Breakdown</h4>
-      <div class="chip-list" id="ctnStatuses"></div>
-    </div>
-    <div class="wide-card" data-panel="ctn_contents">
-      <h4>Top Cargo Contents</h4>
-      <ul class="bar-list" id="ctnContentBars" style="--bar-color:var(--accent2)"></ul>
-    </div>
-  </div>
-
-  <!-- ═══════════════ CHB ENTRIES ═══════════════ -->
-  <div class="section-header" data-section="chb">
-    <h2>📋 CHB Entries</h2>
-    <div class="line"></div>
-    <div class="tag" id="chbTag">—</div>
-  </div>
-
-  <div class="stat-grid cols-4" data-section="chb">
-    <div class="kpi-card" style="--card-color:var(--accent4)" data-panel="chb_total"><div class="kpi-label">Total Entries</div><div class="kpi-value" id="chbTotal">—</div><div class="kpi-sub">all line items</div></div>
-    <div class="kpi-card" style="--card-color:var(--new)" data-panel="chb_released"><div class="kpi-label">Released</div><div class="kpi-value" id="chbReleased">—</div><div class="kpi-sub">cargo released</div></div>
-    <div class="kpi-card" style="--card-color:var(--error)" data-panel="chb_pending"><div class="kpi-label">Pending Release</div><div class="kpi-value" id="chbPending">—</div><div class="kpi-sub">awaiting release</div></div>
-    <div class="kpi-card" style="--card-color:var(--accent2)" data-panel="chb_avgduty"><div class="kpi-label">Avg Duty Rate</div><div class="kpi-value sm" id="chbAvgDuty">—</div><div class="kpi-sub">value duty rate %</div></div>
-  </div>
-
-  <div class="stat-grid cols-3" style="margin-top:12px" data-section="chb">
-    <div class="wide-card" data-panel="chb_duty">
-      <h4>Total CHB Duty</h4>
-      <div style="font-size:28px;font-weight:800;color:var(--accent4);margin:8px 0" id="chbDutyBig">—</div>
-      <div style="font-size:11px;color:var(--muted)">Liquidated: <span id="chbLiqDuty" style="color:var(--text)">—</span></div>
-    </div>
-    <div class="wide-card" data-panel="chb_countries">
-      <h4>Top Countries of Origin</h4>
-      <ul class="bar-list" id="chbCountryBars" style="--bar-color:var(--accent4)"></ul>
-    </div>
-    <div class="wide-card" data-panel="chb_release_donut">
-      <h4>Release Status</h4>
-      <div class="release-wrap" id="releaseWrap">
-        <svg class="donut-svg" width="90" height="90" viewBox="0 0 90 90">
-          <circle cx="45" cy="45" r="35" fill="none" stroke="var(--border)" stroke-width="10"/>
-          <circle id="donutReleased" cx="45" cy="45" r="35" fill="none" stroke="var(--new)" stroke-width="10"
-            stroke-dasharray="0 220" stroke-dashoffset="55" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .8s ease"/>
-          <circle id="donutPending" cx="45" cy="45" r="35" fill="none" stroke="var(--error)" stroke-width="10"
-            stroke-dasharray="0 220" stroke-dashoffset="55" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .8s ease"/>
-        </svg>
-        <div class="donut-legend">
-          <div class="leg-item"><div class="leg-dot" style="background:var(--new)"></div><span style="font-size:12px">Released: <strong id="donutRelLabel">—</strong></span></div>
-          <div class="leg-item"><div class="leg-dot" style="background:var(--error)"></div><span style="font-size:12px">Pending: <strong id="donutPendLabel">—</strong></span></div>
-        </div>
-      </div>
+  <div id="blSearchResults" style="display:none;margin-bottom:28px">
+    <div class="ship-table-wrap">
+      <table class="ship-table">
+        <thead><tr>
+          <th>Ref No</th><th>Entry No</th><th>Importer</th><th>Shipper</th>
+          <th>ETA</th><th>Actual Arrival</th><th>Release Date</th><th>Port</th>
+          <th>ISF Bill Match</th><th>ISF No Bill Match</th>
+          <th>Containers</th><th>Duty Billed</th>
+        </tr></thead>
+        <tbody id="blSearchBody"></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- ═══════════════ FILTER BAR ═══════════════ -->
-  <div class="filter-bar" id="filterBar">
-    <div class="filter-group">
-      <label>ETA Date From</label>
-      <input type="date" id="filterEtaFrom">
-    </div>
-    <div class="filter-group">
-      <label>ETA Date To</label>
-      <input type="date" id="filterEtaTo">
-    </div>
-    <div class="filter-group">
-      <label>ISF Status</label>
+  <!-- ══════════ FILTER BAR ══════════ -->
+  <div class="section-title" id="filter-section">⚙ Filter Shipments</div>
+  <div class="filter-bar">
+    <div class="filter-group"><label>ETA From</label><input type="date" id="filterEtaFrom"></div>
+    <div class="filter-group"><label>ETA To</label><input type="date" id="filterEtaTo"></div>
+    <div class="filter-group"><label>ISF Status</label>
       <select id="filterISF">
         <option value="">All</option>
         <option value="bill_match">ISF Bill Match</option>
@@ -329,155 +449,159 @@
         <option value="neither">Neither</option>
       </select>
     </div>
-    <div class="filter-group">
-      <label>Importer</label>
-      <input type="text" id="filterImporter" placeholder="e.g. AMERICAN COLORS">
-    </div>
-    <button class="filter-btn apply" onclick="applyFilters()">Apply Filters</button>
+    <div class="filter-group"><label>Importer</label><input type="text" id="filterImporter" placeholder="e.g. AMERICAN COLORS"></div>
+    <button class="filter-btn apply" onclick="applyFilters()">Apply</button>
     <button class="filter-btn clear" onclick="clearFilters()">Clear</button>
     <span class="filter-results-count" id="filterCount"></span>
   </div>
-
-  <!-- ═══════════════ TODAY'S CARGO RELEASES ═══════════════ -->
-  <div class="section-header">
-    <h2>📬 Today's Cargo Releases</h2>
-    <div class="line"></div>
-    <span class="releases-count-badge"><span id="todayReleaseCount">—</span> shipments</span>
-  </div>
-  <div class="ship-table-wrap" id="todayReleasesWrap">
-    <table class="ship-table">
-      <thead>
-        <tr>
+  <div id="filteredSection" style="display:none;margin-bottom:28px">
+    <div class="ship-table-wrap">
+      <table class="ship-table">
+        <thead><tr>
           <th>Ref No</th><th>Entry No</th><th>Importer</th><th>Shipper</th>
-          <th>Release Date</th><th>ETA</th><th>Port</th>
+          <th>ETA</th><th>Actual Arrival</th><th>Release Date</th><th>Port</th>
           <th>ISF Bill Match</th><th>ISF No Bill Match</th>
           <th>Containers</th><th>Duty Billed</th>
-        </tr>
-      </thead>
-      <tbody id="todayReleasesBody">
-        <tr><td colspan="11" class="no-data">Loading…</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- ═══════════════ SEARCH BY HOUSE B/L ═══════════════ -->
-  <div class="section-header" style="margin-top:28px">
-    <h2>🔍 Search by House B/L Number</h2>
-    <div class="line"></div>
-  </div>
-  <div class="search-bar">
-    <input type="text" id="blSearchInput" placeholder="Enter House B/L Number (e.g. 2026000168)" onkeydown="if(event.key==='Enter') searchBL()">
-    <button onclick="searchBL()">Search</button>
-  </div>
-  <div id="blSearchResults" style="display:none">
-    <div class="ship-table-wrap">
-      <table class="ship-table">
-        <thead>
-          <tr>
-            <th>Ref No</th><th>Entry No</th><th>Importer</th><th>Shipper</th>
-            <th>ETA</th><th>Actual Arrival</th><th>Release Date</th><th>Port</th>
-            <th>ISF Bill Match</th><th>ISF No Bill Match</th>
-            <th>Containers</th><th>Duty Billed</th>
-          </tr>
-        </thead>
-        <tbody id="blSearchBody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ═══════════════ FILTERED SHIPMENTS TABLE ═══════════════ -->
-  <div class="section-header" style="margin-top:28px" id="filteredSection" style="display:none">
-    <h2>📋 Filtered Shipments</h2>
-    <div class="line"></div>
-  </div>
-  <div id="filteredTableWrap" style="display:none">
-    <div class="ship-table-wrap">
-      <table class="ship-table">
-        <thead>
-          <tr>
-            <th>Ref No</th><th>Entry No</th><th>Importer</th><th>Shipper</th>
-            <th>ETA</th><th>Actual Arrival</th><th>Release Date</th><th>Port</th>
-            <th>ISF Bill Match</th><th>ISF No Bill Match</th>
-            <th>Containers</th><th>Duty Billed</th>
-          </tr>
-        </thead>
+        </tr></thead>
         <tbody id="filteredBody"></tbody>
       </table>
     </div>
   </div>
 
-  <!-- ═══════════════ SHIPMENT DETAIL MODAL ═══════════════ -->
-  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
-    <div class="modal" id="shipModal">
-      <button class="modal-close" onclick="closeModalDirect()">✕</button>
-      <h3 id="modalTitle">Shipment Detail</h3>
-      <div class="modal-sub" id="modalSub"></div>
-
-      <div class="modal-section-title">📦 Shipment Overview</div>
-      <div class="modal-grid" id="modalOverview"></div>
-
-      <div class="modal-section-title">📅 Key Dates</div>
-      <div class="modal-grid" id="modalDates"></div>
-
-      <div class="modal-section-title">🚢 Container & Cargo</div>
-      <div class="modal-grid" id="modalCargo"></div>
-
-      <div class="modal-section-title">📋 CHB / Customs</div>
-      <div class="modal-grid" id="modalCHB"></div>
+  <!-- ══════════ SHIPMENTS KPI ══════════ -->
+  <div class="section-title" id="smh26-section">🚢 Shipments (SMH26) <span class="section-tag" id="smh26Tag">—</span></div>
+  <div class="kpi-grid cols-5">
+    <div class="kpi-card" style="--card-color:#1565c0" data-panel="smh26_total"><div class="kpi-label">Total Shipments</div><div class="kpi-value" id="smh26Total">—</div><div class="kpi-sub">all records</div></div>
+    <div class="kpi-card" style="--card-color:#2e7d32" data-panel="smh26_month"><div class="kpi-label">This Month</div><div class="kpi-value" id="smh26Month">—</div><div class="kpi-sub">opened this month</div></div>
+    <div class="kpi-card" style="--card-color:#6a1b9a" data-panel="smh26_importers"><div class="kpi-label">Importers</div><div class="kpi-value" id="smh26Importers">—</div><div class="kpi-sub">unique</div></div>
+    <div class="kpi-card" style="--card-color:#e65100" data-panel="smh26_duty"><div class="kpi-label">Total Duty Billed</div><div class="kpi-value sm" id="smh26Duty">—</div><div class="kpi-sub">USD</div></div>
+    <div class="kpi-card" style="--card-color:#00796b" data-panel="smh26_mpf"><div class="kpi-label">Total MPF</div><div class="kpi-value sm" id="smh26MPF">—</div><div class="kpi-sub">merchandise processing</div></div>
+  </div>
+  <div class="kpi-grid cols-1" style="margin-top:14px">
+    <div class="card" data-panel="smh26_ports">
+      <h4>Top Ports of Discharge</h4>
+      <ul class="bar-list" id="smh26PortBars" style="--bar-color:#1565c0"></ul>
     </div>
   </div>
 
-  <!-- ═══════════════ CUSTOMIZE DRAWER ═══════════════ -->
-  <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
-  <div class="drawer" id="drawer">
-    <div class="drawer-header">
-      <span>Customize Dashboard</span>
-      <button class="drawer-close" onclick="toggleDrawer()">✕</button>
+  <!-- ══════════ CONTAINERS KPI ══════════ -->
+  <div class="section-title" id="ctn-section">📦 Containers <span class="section-tag" id="containerTag">—</span></div>
+  <div class="kpi-grid cols-5">
+    <div class="kpi-card" style="--card-color:#e65100" data-panel="ctn_total"><div class="kpi-label">Total Containers</div><div class="kpi-value" id="ctnTotal">—</div><div class="kpi-sub">all records</div></div>
+    <div class="kpi-card" style="--card-color:#1565c0" data-panel="ctn_cbm"><div class="kpi-label">Total Volume</div><div class="kpi-value sm" id="ctnCBM">—</div><div class="kpi-sub">CBM</div></div>
+    <div class="kpi-card" style="--card-color:#2e7d32" data-panel="ctn_weight"><div class="kpi-label">Total Weight</div><div class="kpi-value sm" id="ctnWeight">—</div><div class="kpi-sub">lbs</div></div>
+    <div class="kpi-card" style="--card-color:#f57f17" data-panel="ctn_pieces"><div class="kpi-label">Total Pieces</div><div class="kpi-value sm" id="ctnPieces">—</div><div class="kpi-sub">units</div></div>
+    <div class="kpi-card" style="--card-color:#6a1b9a" data-panel="ctn_types"><div class="kpi-label">Container Types</div><div class="kpi-value sm" id="ctnTypes" style="font-size:13px;padding-top:6px">—</div><div class="kpi-sub">breakdown</div></div>
+  </div>
+  <div class="kpi-grid cols-2" style="margin-top:14px">
+    <div class="card" data-panel="ctn_statuses"><h4>Status Breakdown</h4><div class="chip-list" id="ctnStatuses"></div></div>
+    <div class="card" data-panel="ctn_contents"><h4>Top Cargo Contents</h4><ul class="bar-list" id="ctnContentBars" style="--bar-color:#e65100"></ul></div>
+  </div>
+
+  <!-- ══════════ CHB KPI ══════════ -->
+  <div class="section-title" id="chb-section">📋 CHB Entries <span class="section-tag" id="chbTag">—</span></div>
+  <div class="kpi-grid cols-4">
+    <div class="kpi-card" style="--card-color:#00796b" data-panel="chb_total"><div class="kpi-label">Total Entries</div><div class="kpi-value" id="chbTotal">—</div><div class="kpi-sub">all line items</div></div>
+    <div class="kpi-card" style="--card-color:#2e7d32" data-panel="chb_released"><div class="kpi-label">Released</div><div class="kpi-value" id="chbReleased">—</div><div class="kpi-sub">cargo released</div></div>
+    <div class="kpi-card" style="--card-color:#c62828" data-panel="chb_pending"><div class="kpi-label">Pending Release</div><div class="kpi-value" id="chbPending">—</div><div class="kpi-sub">awaiting release</div></div>
+    <div class="kpi-card" style="--card-color:#e65100" data-panel="chb_avgduty"><div class="kpi-label">Avg Duty Rate</div><div class="kpi-value sm" id="chbAvgDuty">—</div><div class="kpi-sub">value duty rate %</div></div>
+  </div>
+  <div class="kpi-grid cols-3" style="margin-top:14px">
+    <div class="card" data-panel="chb_duty">
+      <h4>Total CHB Duty</h4>
+      <div style="font-size:30px;font-weight:700;color:#00796b;margin:8px 0" id="chbDutyBig">—</div>
+      <div style="font-size:12px;color:var(--muted)">Liquidated: <span id="chbLiqDuty" style="color:var(--text2);font-weight:600">—</span></div>
     </div>
-    <div class="drawer-body">
-      <div class="drawer-section">
-        <div class="drawer-section-title">🚢 Shipments</div>
-        <label class="toggle-row"><span>Total Shipments</span><input type="checkbox" data-panel="smh26_total" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>This Month</span><input type="checkbox" data-panel="smh26_month" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Unique Importers</span><input type="checkbox" data-panel="smh26_importers" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Total Duty Billed</span><input type="checkbox" data-panel="smh26_duty" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Total MPF</span><input type="checkbox" data-panel="smh26_mpf" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Top Discharge Ports</span><input type="checkbox" data-panel="smh26_ports" onchange="togglePanel(this)"></label>
+    <div class="card" data-panel="chb_countries"><h4>Top Countries of Origin</h4><ul class="bar-list" id="chbCountryBars" style="--bar-color:#00796b"></ul></div>
+    <div class="card" data-panel="chb_release_donut">
+      <h4>Release Status</h4>
+      <div class="release-wrap">
+        <svg class="donut-svg" width="90" height="90" viewBox="0 0 90 90">
+          <circle cx="45" cy="45" r="35" fill="none" stroke="#f0f4f8" stroke-width="10"/>
+          <circle id="donutReleased" cx="45" cy="45" r="35" fill="none" stroke="#2e7d32" stroke-width="10" stroke-dasharray="0 220" stroke-dashoffset="55" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .8s ease"/>
+          <circle id="donutPending"  cx="45" cy="45" r="35" fill="none" stroke="#c62828" stroke-width="10" stroke-dasharray="0 220" stroke-dashoffset="55" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .8s ease"/>
+        </svg>
+        <div>
+          <div class="leg-item"><div class="leg-dot" style="background:#2e7d32"></div>Released: <strong id="donutRelLabel">—</strong></div>
+          <div class="leg-item"><div class="leg-dot" style="background:#c62828"></div>Pending: <strong id="donutPendLabel">—</strong></div>
+        </div>
       </div>
-      <div class="drawer-section">
-        <div class="drawer-section-title">📦 Containers</div>
-        <label class="toggle-row"><span>Total Containers</span><input type="checkbox" data-panel="ctn_total" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Total Volume (CBM)</span><input type="checkbox" data-panel="ctn_cbm" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Total Weight</span><input type="checkbox" data-panel="ctn_weight" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Total Pieces</span><input type="checkbox" data-panel="ctn_pieces" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Container Types</span><input type="checkbox" data-panel="ctn_types" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Status Breakdown</span><input type="checkbox" data-panel="ctn_statuses" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Top Cargo Contents</span><input type="checkbox" data-panel="ctn_contents" onchange="togglePanel(this)"></label>
-      </div>
-      <div class="drawer-section">
-        <div class="drawer-section-title">📋 CHB Entries</div>
-        <label class="toggle-row"><span>Total Entries</span><input type="checkbox" data-panel="chb_total" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Released Count</span><input type="checkbox" data-panel="chb_released" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Pending Release</span><input type="checkbox" data-panel="chb_pending" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Avg Duty Rate</span><input type="checkbox" data-panel="chb_avgduty" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Total CHB Duty</span><input type="checkbox" data-panel="chb_duty" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Top Countries</span><input type="checkbox" data-panel="chb_countries" onchange="togglePanel(this)"></label>
-        <label class="toggle-row"><span>Release Status Donut</span><input type="checkbox" data-panel="chb_release_donut" onchange="togglePanel(this)"></label>
-      </div>
-      <button class="drawer-reset" onclick="resetPanels()">Reset to Default</button>
     </div>
   </div>
 
-  <footer>Logistics Monitor · SMH26 · Container · CHB · Auto-refreshes every 60s</footer>
+  <footer>OVLogiPulse · Supply Chain Intelligence · SMH26 · Container · CHB · Auto-refreshes every 60s</footer>
+</main>
+</div>
+
+<!-- SHIPMENT DETAIL MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <div class="modal-hero">
+      <div class="modal-hero-icon">🚢</div>
+      <div>
+        <h3 id="modalTitle">Shipment Detail</h3>
+        <div class="modal-sub" id="modalSub"></div>
+      </div>
+    </div>
+    <div class="modal-section-title">📦 Shipment Overview</div>
+    <div class="modal-grid" id="modalOverview"></div>
+    <div class="modal-section-title">📅 Key Dates</div>
+    <div class="modal-grid" id="modalDates"></div>
+    <div class="modal-section-title">🚢 Container & Cargo</div>
+    <div class="modal-grid" id="modalCargo"></div>
+    <div class="modal-section-title">📋 CHB / Customs</div>
+    <div class="modal-grid" id="modalCHB"></div>
+  </div>
+</div>
+
+<!-- CUSTOMIZE DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header"><span>Customize Dashboard</span><button class="drawer-close" onclick="toggleDrawer()">✕</button></div>
+  <div class="drawer-body">
+    <div class="drawer-section">
+      <div class="drawer-section-title">🚢 Shipments</div>
+      <label class="toggle-row"><span>Total Shipments</span><input type="checkbox" data-panel="smh26_total" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>This Month</span><input type="checkbox" data-panel="smh26_month" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Unique Importers</span><input type="checkbox" data-panel="smh26_importers" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Total Duty Billed</span><input type="checkbox" data-panel="smh26_duty" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Total MPF</span><input type="checkbox" data-panel="smh26_mpf" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Top Discharge Ports</span><input type="checkbox" data-panel="smh26_ports" onchange="togglePanel(this)"></label>
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-section-title">📦 Containers</div>
+      <label class="toggle-row"><span>Total Containers</span><input type="checkbox" data-panel="ctn_total" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Total Volume (CBM)</span><input type="checkbox" data-panel="ctn_cbm" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Total Weight</span><input type="checkbox" data-panel="ctn_weight" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Total Pieces</span><input type="checkbox" data-panel="ctn_pieces" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Container Types</span><input type="checkbox" data-panel="ctn_types" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Status Breakdown</span><input type="checkbox" data-panel="ctn_statuses" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Top Cargo Contents</span><input type="checkbox" data-panel="ctn_contents" onchange="togglePanel(this)"></label>
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-section-title">📋 CHB Entries</div>
+      <label class="toggle-row"><span>Total Entries</span><input type="checkbox" data-panel="chb_total" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Released Count</span><input type="checkbox" data-panel="chb_released" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Pending Release</span><input type="checkbox" data-panel="chb_pending" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Avg Duty Rate</span><input type="checkbox" data-panel="chb_avgduty" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Total CHB Duty</span><input type="checkbox" data-panel="chb_duty" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Top Countries</span><input type="checkbox" data-panel="chb_countries" onchange="togglePanel(this)"></label>
+      <label class="toggle-row"><span>Release Status Donut</span><input type="checkbox" data-panel="chb_release_donut" onchange="togglePanel(this)"></label>
+    </div>
+    <button class="drawer-reset" onclick="resetPanels()">Reset to Default</button>
+  </div>
 </div>
 
 <script>
 var webAppUrl = "https://script.google.com/macros/s/AKfycbwGhNtW5dEKIGPTXNXgo7JswcH4MZofQtl9VATf93YiIT_e7YRHGQojsnS0TVc7x9S8fA/exec";
 var timer = null;
+var allShipments = [];
 
 window.onload = function() {
   loadData();
   startTimer();
+  initMap();
 };
 
 function startTimer() {
@@ -486,17 +610,15 @@ function startTimer() {
 }
 
 function loadData() {
-  if (!webAppUrl) return;
   var btn = document.getElementById("refreshBtn");
   btn.classList.add("spinning");
   setStatus("idle", "Syncing…");
-
   fetch(webAppUrl)
     .then(function(r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
     .then(function(data) {
       if (!data.ok) throw new Error("Script error");
       renderAll(data);
-      document.getElementById("lastChecked").textContent = "Last refreshed: " + new Date().toLocaleTimeString();
+      document.getElementById("lastChecked").textContent = "Updated " + new Date().toLocaleTimeString();
       setStatus("active", "Live · hourly sync");
     })
     .catch(function(e) {
@@ -508,344 +630,417 @@ function loadData() {
 
 function renderAll(data) {
   var k = data.kpi || {};
+  set("smh26Total",    fmt(k.smh26_total_shipments));
+  set("smh26Month",    fmt(k.smh26_shipments_this_month));
+  set("smh26Importers",fmt(k.smh26_unique_importers));
+  set("smh26Duty",     money(k.smh26_total_duty_billed));
+  set("smh26MPF",      money(k.smh26_total_mpf));
+  set("smh26Tag",      (k.smh26_total_shipments||"—") + " records");
+  renderBars("smh26PortBars", k.smh26_top_ports);
 
-  // ── SMH26
-  set("smh26Total",     fmt(k.smh26_total_shipments));
-  set("smh26Month",     fmt(k.smh26_shipments_this_month));
-  set("smh26Importers", fmt(k.smh26_unique_importers));
-  set("smh26Duty",      money(k.smh26_total_duty_billed));
-  set("smh26MPF",       money(k.smh26_total_mpf));
-  set("smh26Tag",       (k.smh26_total_shipments || "—") + " total records");
-  renderBars("smh26PortBars",     k.smh26_top_ports);
-
-  // ── Container
-  set("ctnTotal",   fmt(k.container_total));
-  set("ctnCBM",     num(k.container_total_cbm, 0) + " CBM");
-  set("ctnWeight",  num(k.container_total_weight_lbs, 0) + " lbs");
-  set("ctnPieces",  fmt(k.container_total_pieces));
-  set("ctnTag",     (k.container_total || "—") + " total records");
-
-  // Container types inline
-  var ctypes = parseTopN(k.container_types);
-  set("ctnTypes", ctypes.map(function(i){ return i.label + " (" + i.count + ")"; }).join(" · ") || "—");
-
+  set("ctnTotal",  fmt(k.container_total));
+  set("ctnCBM",    num(k.container_total_cbm,0) + " CBM");
+  set("ctnWeight", num(k.container_total_weight_lbs,0) + " lbs");
+  set("ctnPieces", fmt(k.container_total_pieces));
+  set("containerTag", (k.container_total||"—") + " records");
+  var ct = parseTopN(k.container_types);
+  set("ctnTypes", ct.map(function(i){return i.label+"("+i.count+")";}).join(" · ")||"—");
   renderChips("ctnStatuses", parseTopN(k.container_statuses));
   renderBars("ctnContentBars", k.container_top_contents);
 
-  // ── CHB
-  var released = parseInt(k.chb_released_count) || 0;
-  var pending  = parseInt(k.chb_pending_count)  || 0;
-  var total    = released + pending;
-
-  set("chbTotal",    fmt(k.chb_total_entries));
-  set("chbReleased", fmt(released));
-  set("chbPending",  fmt(pending));
-  set("chbAvgDuty",  num(k.chb_avg_duty_rate, 1) + "%");
-  set("chbDutyBig",  money(k.chb_total_duty));
-  set("chbLiqDuty",  money(k.chb_liquidated_duty));
-  set("chbTag",      (k.chb_total_entries || "—") + " total records");
-  set("donutRelLabel",  released.toLocaleString());
-  set("donutPendLabel", pending.toLocaleString());
-
+  var released = parseInt(k.chb_released_count)||0, pending = parseInt(k.chb_pending_count)||0;
+  set("chbTotal",     fmt(k.chb_total_entries));
+  set("chbReleased",  fmt(released));
+  set("chbPending",   fmt(pending));
+  set("chbAvgDuty",   num(k.chb_avg_duty_rate,1)+"%");
+  set("chbDutyBig",   money(k.chb_total_duty));
+  set("chbLiqDuty",   money(k.chb_liquidated_duty));
+  set("chbTag",       (k.chb_total_entries||"—") + " records");
+  set("donutRelLabel",released.toLocaleString());
+  set("donutPendLabel",pending.toLocaleString());
   renderBars("chbCountryBars", k.chb_top_countries);
-  renderDonut(released, pending, total);
-  storeShipments(data);
-}
+  renderDonut(released, pending, released+pending);
 
-// ── Donut chart
-function renderDonut(released, pending, total) {
-  if (!total) return;
-  var circ = 2 * Math.PI * 35; // ~220
-  var relDash = (released / total) * circ;
-  var penDash = (pending  / total) * circ;
-  var relEl = document.getElementById("donutReleased");
-  var penEl = document.getElementById("donutPending");
-  relEl.setAttribute("stroke-dasharray", relDash + " " + circ);
-  relEl.setAttribute("stroke-dashoffset", circ / 4);
-  penEl.setAttribute("stroke-dasharray", penDash + " " + circ);
-  penEl.setAttribute("stroke-dashoffset", (circ / 4) - relDash);
-}
-
-// ── Bar list (parses "label:count|label:count" string)
-function renderBars(id, str) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  var items = parseTopN(str);
-  if (!items.length) { el.innerHTML = '<li style="color:var(--muted);font-size:11px">No data yet</li>'; return; }
-  var max = items[0].count;
-  el.innerHTML = items.map(function(item) {
-    var pct = max > 0 ? (item.count / max * 100).toFixed(0) : 0;
-    return '<li>' +
-      '<span class="bar-label" title="' + item.label + '">' + item.label + '</span>' +
-      '<span class="bar-track"><span class="bar-fill" style="width:' + pct + '%"></span></span>' +
-      '<span class="bar-count">' + item.count + '</span></li>';
-  }).join("");
-}
-
-// ── Chips
-function renderChips(id, items) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  var colors = ["cyan","green","orange","purple","red"];
-  if (!items.length) { el.innerHTML = '<span class="chip cyan">No data</span>'; return; }
-  el.innerHTML = items.map(function(item, i) {
-    return '<span class="chip ' + (colors[i % colors.length]) + '">' + item.label + ' · ' + item.count + '</span>';
-  }).join("");
-}
-
-// ── Helpers
-function parseTopN(str) {
-  if (!str) return [];
-  return str.toString().split("|").filter(Boolean).map(function(s) {
-    var parts = s.split(":");
-    var count = parseInt(parts.pop()) || 0;
-    return { label: parts.join(":").trim(), count: count };
-  }).filter(function(i){ return i.label; });
-}
-function set(id, val) { var el = document.getElementById(id); if (el) el.textContent = val !== undefined && val !== null ? val : "—"; }
-function fmt(v)  { return v !== undefined && v !== null && v !== "" ? parseInt(v).toLocaleString() : "—"; }
-function num(v, dec) { var n = parseFloat(v); return isNaN(n) ? "—" : n.toLocaleString(undefined, {minimumFractionDigits: dec, maximumFractionDigits: dec}); }
-function money(v) { var n = parseFloat(v); return isNaN(n) || n === 0 ? "$0" : "$" + n.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
-function setStatus(state, text) {
-  var pill = document.getElementById("statusPill");
-  pill.className = "status-pill " + (state === "active" ? "" : state);
-  document.getElementById("statusText").textContent = text;
-}
-// ── Shipment data store
-var allShipments = [];
-
-function storeShipments(data) {
   allShipments = data.shipments || [];
   renderTodayReleases();
+  updateMapWithData(k);
 }
 
-// ── Today's releases
+// MAP
+var mapProjection, mapPath, mapSvgEl;
+
+// Port of discharge → lat/lng
+var PORT_COORDS = {
+  "NEW YORK/NEWARK AREA": [40.6840, -74.1745],
+  "LOS ANGELES, CA":      [33.7395, -118.2617],
+  "NEW YORK, NY":         [40.7128, -74.0060],
+  "JFK AIRPORT":          [40.6413, -73.7781],
+  "SAVANNAH, GA":         [32.0835, -81.0998],
+  "BUFFALO-NIAGARA FALLS":[42.8864, -78.8784],
+  "LONG BEACH, CA":       [33.7701, -118.1937],
+  "PT OF NORFOLK-NWPT NWS":[36.9460,-76.3152],
+  "LOS ANGELES INT AIRPORT":[33.9425,-118.4081],
+  "HOUSTON, TX":          [29.7604, -95.3698],
+  "CHARLESTON, SC":       [32.7765, -79.9311],
+  "BOSTON, MA":           [42.3601, -71.0589],
+  "CHICAGO, IL":          [41.8781, -87.6298],
+  "SEATTLE, WA":          [47.6062, -122.3321],
+  "METROPOLITAN OAKLAND INT":[37.7213,-122.2208],
+  "SAN FRANCISCO INTL AIRPO":[37.6213,-122.3790],
+  "DALLAS/FT WORTH TX":  [32.8998, -97.0403],
+  "ATLANTA INTL AIRPORT (AT":[33.6407,-84.4277],
+  "CLEVELAND, OH":       [41.4993, -81.6944],
+  "ST. LOUIS, MO":       [38.6270, -90.1994]
+};
+
+// Country of origin → approximate lat/lng
+var COUNTRY_COORDS = {
+  "CN-CHINA(MAINLAND)": [35.8617,  104.1954],
+  "IN-INDIA":           [20.5937,   78.9629],
+  "TW-TAIWAN":          [23.6978,  120.9605],
+  "ID-INDONESIA":       [-0.7893,  113.9213],
+  "NP-NEPAL":           [28.3949,   84.1240],
+  "FR-FRANCE":          [46.2276,    2.2137],
+  "IT-ITALY":           [41.8719,   12.5674],
+  "VN-VIETNAM":         [14.0583,  108.2772],
+  "XO-ONTARIO":         [51.2538,  -85.3232],
+  "TR-TURKIYE":         [38.9637,   35.2433],
+  "TH-THAILAND":        [15.8700,  100.9925],
+  "BD-BANGLADESH":      [23.6850,   90.3563],
+  "MY-MALAYSIA":        [ 4.2105,  101.9758],
+  "DE-GERMANY, FED. REPUBLIC":[51.1657,10.4515],
+  "RO-ROMANIA":         [45.9432,   24.9668],
+  "AU-AUSTRALIA":       [-25.2744, 133.7751],
+  "PE-PERU":            [-9.1900,  -75.0152],
+  "IL-ISRAEL":          [31.0461,   34.8516],
+  "ES-SPAIN":           [40.4637,   -3.7492],
+  "NL-NETHERLANDS":     [52.1326,    5.2913]
+};
+
+function initMap() {
+  var container = document.getElementById("mapContainer");
+  var w = container.offsetWidth || 900, h = 420;
+
+  mapProjection = d3.geoNaturalEarth1()
+    .scale(w / 6.5)
+    .translate([w / 2, h / 2]);
+
+  mapPath = d3.geoPath().projection(mapProjection);
+  mapSvgEl = d3.select("#mapSvg").attr("viewBox", "0 0 " + w + " " + h);
+
+  // Ocean background
+  mapSvgEl.append("rect").attr("width", w).attr("height", h).attr("fill", "#cfe8f5");
+
+  // Load world topojson
+  fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+    .then(function(r){ return r.json(); })
+    .then(function(world){
+      var countries = topojson.feature(world, world.objects.countries);
+      mapSvgEl.append("g").attr("class","countries")
+        .selectAll("path")
+        .data(countries.features)
+        .enter().append("path")
+        .attr("d", mapPath)
+        .attr("fill", "#e8f0e9")
+        .attr("stroke", "#c5d5c6")
+        .attr("stroke-width", 0.4);
+
+      // Graticule
+      var graticule = d3.geoGraticule()();
+      mapSvgEl.append("path").datum(graticule)
+        .attr("d", mapPath)
+        .attr("fill","none").attr("stroke","rgba(100,150,180,0.15)").attr("stroke-width",0.5);
+
+      // Add static known ports and origins once map is ready
+      drawStaticMapPoints();
+    })
+    .catch(function(){ drawStaticMapPoints(); });
+}
+
+function drawStaticMapPoints() {
+  var tooltip = document.getElementById("mapTooltip");
+
+  // Draw origin country dots
+  Object.keys(COUNTRY_COORDS).forEach(function(country) {
+    var coord = COUNTRY_COORDS[country];
+    var pt = mapProjection([coord[1], coord[0]]);
+    if (!pt) return;
+    mapSvgEl.append("circle")
+      .attr("cx", pt[0]).attr("cy", pt[1]).attr("r", 5)
+      .attr("fill", "#ff7043").attr("fill-opacity", 0.7)
+      .attr("stroke", "#fff").attr("stroke-width", 1)
+      .style("cursor","pointer")
+      .on("mouseover", function(event) {
+        tooltip.style.opacity = "1";
+        tooltip.innerHTML = "<strong>" + country + "</strong>Origin country";
+        tooltip.style.left = (event.offsetX + 12) + "px";
+        tooltip.style.top  = (event.offsetY - 10) + "px";
+      })
+      .on("mouseout", function(){ tooltip.style.opacity = "0"; });
+  });
+
+  // Draw US port dots
+  Object.keys(PORT_COORDS).forEach(function(port) {
+    var coord = PORT_COORDS[port];
+    var pt = mapProjection([coord[1], coord[0]]);
+    if (!pt) return;
+    mapSvgEl.append("circle")
+      .attr("cx", pt[0]).attr("cy", pt[1]).attr("r", 7)
+      .attr("fill", "#1565c0").attr("fill-opacity", 0.85)
+      .attr("stroke", "#fff").attr("stroke-width", 1.5)
+      .style("cursor","pointer")
+      .on("mouseover", function(event) {
+        tooltip.style.opacity = "1";
+        tooltip.innerHTML = "<strong>" + port + "</strong>Port of Discharge";
+        tooltip.style.left = (event.offsetX + 12) + "px";
+        tooltip.style.top  = (event.offsetY - 10) + "px";
+      })
+      .on("mouseout", function(){ tooltip.style.opacity = "0"; });
+  });
+}
+
+function updateMapWithData(k) {
+  if (!mapSvgEl || !mapProjection) return;
+  // Remove old arcs and sized circles
+  mapSvgEl.selectAll(".route-arc,.port-sized,.origin-sized").remove();
+
+  var tooltip = document.getElementById("mapTooltip");
+
+  // Parse top ports and countries
+  var topPorts    = parseTopN(k.smh26_top_ports    || "").slice(0,8);
+  var topCountries= parseTopN(k.chb_top_countries  || "").slice(0,10);
+
+  if (!topPorts.length || !topCountries.length) return;
+  var maxPort    = topPorts[0].count    || 1;
+  var maxCountry = topCountries[0].count|| 1;
+
+  // Draw arc routes (top 3 countries → top 3 ports)
+  var arcGroup = mapSvgEl.append("g").attr("class","route-arc");
+  topCountries.slice(0,5).forEach(function(c) {
+    var cCoord = COUNTRY_COORDS[c.label];
+    if (!cCoord) return;
+    var src = mapProjection([cCoord[1], cCoord[0]]);
+    if (!src) return;
+    topPorts.slice(0,3).forEach(function(p) {
+      var pCoord = PORT_COORDS[p.label];
+      if (!pCoord) return;
+      var dst = mapProjection([pCoord[1], pCoord[0]]);
+      if (!dst) return;
+      var mx = (src[0]+dst[0])/2, my = Math.min(src[1],dst[1]) - 40;
+      arcGroup.append("path")
+        .attr("d","M"+src[0]+","+src[1]+" Q"+mx+","+my+" "+dst[0]+","+dst[1])
+        .attr("fill","none")
+        .attr("stroke","rgba(255,193,7,0.35)")
+        .attr("stroke-width", 1)
+        .attr("stroke-dasharray","4,3");
+    });
+  });
+
+  // Sized port circles
+  topPorts.forEach(function(p) {
+    var pCoord = PORT_COORDS[p.label];
+    if (!pCoord) return;
+    var pt = mapProjection([pCoord[1], pCoord[0]]);
+    if (!pt) return;
+    var r = 5 + (p.count / maxPort) * 18;
+    mapSvgEl.append("circle").attr("class","port-sized")
+      .attr("cx",pt[0]).attr("cy",pt[1]).attr("r",r)
+      .attr("fill","rgba(21,101,192,0.25)")
+      .attr("stroke","#1565c0").attr("stroke-width",1.5)
+      .style("cursor","pointer")
+      .on("mouseover",function(event){
+        tooltip.style.opacity="1";
+        tooltip.innerHTML="<strong>"+p.label+"</strong>"+p.count+" shipments";
+        tooltip.style.left=(event.offsetX+12)+"px";
+        tooltip.style.top=(event.offsetY-10)+"px";
+      })
+      .on("mouseout",function(){tooltip.style.opacity="0";});
+  });
+
+  // Sized origin circles
+  topCountries.forEach(function(c) {
+    var cCoord = COUNTRY_COORDS[c.label];
+    if (!cCoord) return;
+    var pt = mapProjection([cCoord[1], cCoord[0]]);
+    if (!pt) return;
+    var r = 4 + (c.count / maxCountry) * 12;
+    mapSvgEl.append("circle").attr("class","origin-sized")
+      .attr("cx",pt[0]).attr("cy",pt[1]).attr("r",r)
+      .attr("fill","rgba(255,112,67,0.3)")
+      .attr("stroke","#ff7043").attr("stroke-width",1.5)
+      .style("cursor","pointer")
+      .on("mouseover",function(event){
+        tooltip.style.opacity="1";
+        tooltip.innerHTML="<strong>"+c.label+"</strong>"+c.count+" entries";
+        tooltip.style.left=(event.offsetX+12)+"px";
+        tooltip.style.top=(event.offsetY-10)+"px";
+      })
+      .on("mouseout",function(){tooltip.style.opacity="0";});
+  });
+}
+
+// TODAY'S RELEASES
 function renderTodayReleases() {
   var today = todayStr();
-  var releases = allShipments.filter(function(s) {
-    return normalizeDate(s["CHB CARGO RELEASE DATE"]) === today;
-  });
+  var releases = allShipments.filter(function(s){ return normalizeDate(s["CHB CARGO RELEASE DATE"])===today; });
   document.getElementById("todayReleaseCount").textContent = releases.length;
+  document.getElementById("sidebarReleaseCount").textContent = releases.length;
   var tbody = document.getElementById("todayReleasesBody");
-  if (!releases.length) {
-    tbody.innerHTML = '<tr><td colspan="11" class="no-data">No cargo releases today (' + today + ')</td></tr>';
-    return;
-  }
-  tbody.innerHTML = releases.map(function(s) { return shipRow(s, 11, true); }).join("");
+  if (!releases.length) { tbody.innerHTML='<tr><td colspan="11" class="no-data">No cargo releases today ('+today+')</td></tr>'; return; }
+  tbody.innerHTML = releases.map(function(s){ return shipRow(s,11,true); }).join("");
 }
 
-// ── Filters
+// FILTERS
 function applyFilters() {
-  var etaFrom   = document.getElementById("filterEtaFrom").value;
-  var etaTo     = document.getElementById("filterEtaTo").value;
-  var isfFilter = document.getElementById("filterISF").value;
-  var importer  = document.getElementById("filterImporter").value.trim().toUpperCase();
-
-  var results = allShipments.filter(function(s) {
-    var eta = normalizeDate(s["ETA DATE"]);
-    if (etaFrom && eta < etaFrom) return false;
-    if (etaTo   && eta > etaTo)   return false;
-    if (importer && s["IMPORTER NAME"].toUpperCase().indexOf(importer) === -1) return false;
-    if (isfFilter === "bill_match"    && !s["ISF BILL MATCH DATE"])    return false;
-    if (isfFilter === "no_bill_match" && !s["ISF NO BILL MATCH DATE"]) return false;
-    if (isfFilter === "neither" && (s["ISF BILL MATCH DATE"] || s["ISF NO BILL MATCH DATE"])) return false;
+  var etaFrom=document.getElementById("filterEtaFrom").value;
+  var etaTo=document.getElementById("filterEtaTo").value;
+  var isf=document.getElementById("filterISF").value;
+  var imp=document.getElementById("filterImporter").value.trim().toUpperCase();
+  var results=allShipments.filter(function(s){
+    var eta=normalizeDate(s["ETA DATE"]);
+    if(etaFrom&&eta<etaFrom)return false;
+    if(etaTo&&eta>etaTo)return false;
+    if(imp&&s["IMPORTER NAME"].toUpperCase().indexOf(imp)===-1)return false;
+    if(isf==="bill_match"&&!s["ISF BILL MATCH DATE"])return false;
+    if(isf==="no_bill_match"&&!s["ISF NO BILL MATCH DATE"])return false;
+    if(isf==="neither"&&(s["ISF BILL MATCH DATE"]||s["ISF NO BILL MATCH DATE"]))return false;
     return true;
   });
-
-  document.getElementById("filterCount").textContent = results.length + " result" + (results.length !== 1 ? "s" : "");
-  document.getElementById("filteredSection").style.display = "";
-  document.getElementById("filteredTableWrap").style.display = "";
-
-  var tbody = document.getElementById("filteredBody");
-  if (!results.length) {
-    tbody.innerHTML = '<tr><td colspan="12" class="no-data">No shipments match the selected filters</td></tr>';
-    return;
-  }
-  tbody.innerHTML = results.map(function(s) { return shipRow(s, 12, false); }).join("");
+  document.getElementById("filterCount").textContent=results.length+" result"+(results.length!==1?"s":"");
+  document.getElementById("filteredSection").style.display="";
+  var tbody=document.getElementById("filteredBody");
+  if(!results.length){tbody.innerHTML='<tr><td colspan="12" class="no-data">No shipments match</td></tr>';return;}
+  tbody.innerHTML=results.map(function(s){return shipRow(s,12,false);}).join("");
+}
+function clearFilters(){
+  ["filterEtaFrom","filterEtaTo","filterISF","filterImporter"].forEach(function(id){document.getElementById(id).value="";});
+  document.getElementById("filterCount").textContent="";
+  document.getElementById("filteredSection").style.display="none";
 }
 
-function clearFilters() {
-  document.getElementById("filterEtaFrom").value = "";
-  document.getElementById("filterEtaTo").value   = "";
-  document.getElementById("filterISF").value      = "";
-  document.getElementById("filterImporter").value = "";
-  document.getElementById("filterCount").textContent = "";
-  document.getElementById("filteredSection").style.display = "none";
-  document.getElementById("filteredTableWrap").style.display = "none";
-}
-
-// ── B/L Search
-function searchBL() {
-  var query = document.getElementById("blSearchInput").value.trim().toUpperCase();
-  if (!query) return;
-
-  var results = allShipments.filter(function(s) {
-    return (s["MANIFEST HOUSE B/L NUMBER"] || "").toUpperCase().indexOf(query) !== -1 ||
-           (s["BL NUMBER MASTER"] || "").toUpperCase().indexOf(query) !== -1;
+// B/L SEARCH
+function searchBL(){
+  var q=document.getElementById("blSearchInput").value.trim().toUpperCase();
+  if(!q)return;
+  var results=allShipments.filter(function(s){
+    return (s["MANIFEST HOUSE B/L NUMBER"]||"").toUpperCase().indexOf(q)!==-1||(s["BL NUMBER MASTER"]||"").toUpperCase().indexOf(q)!==-1;
   });
-
-  document.getElementById("blSearchResults").style.display = "";
-  var tbody = document.getElementById("blSearchBody");
-  if (!results.length) {
-    tbody.innerHTML = '<tr><td colspan="12" class="no-data">No results found for "' + query + '"</td></tr>';
-    return;
-  }
-  tbody.innerHTML = results.map(function(s) { return shipRow(s, 12, false); }).join("");
+  document.getElementById("blSearchResults").style.display="";
+  var tbody=document.getElementById("blSearchBody");
+  if(!results.length){tbody.innerHTML='<tr><td colspan="12" class="no-data">No results for "'+q+'"</td></tr>';return;}
+  tbody.innerHTML=results.map(function(s){return shipRow(s,12,false);}).join("");
 }
 
-// ── Build a table row (cols = 11 for today's releases, 12 for others)
-function shipRow(s, cols, isToday) {
-  var releaseClass = isToday ? "release-today" : "";
-  var isfBill   = s["ISF BILL MATCH DATE"]    ? '<span class="isf-match">'   + s["ISF BILL MATCH DATE"]    + '</span>' : '<span style="color:var(--muted)">—</span>';
-  var isfNoBill = s["ISF NO BILL MATCH DATE"] ? '<span class="isf-nomatch">' + s["ISF NO BILL MATCH DATE"] + '</span>' : '<span style="color:var(--muted)">—</span>';
-  var duty = s["DUTY BILLED"] ? "$" + parseFloat(s["DUTY BILLED"]).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) : "—";
-
-  var cells = [
-    '<td class="mono" style="cursor:pointer;color:var(--accent)" onclick=\'openModal("' + esc(s["REFERENCE NO"]) + '")\'>' + (s["REFERENCE NO"]||"—") + '</td>',
-    '<td class="mono">' + (s["ENTRY NUMBER"]||"—") + '</td>',
-    '<td>' + (s["IMPORTER NAME"]||"—") + '</td>',
-    '<td style="color:var(--muted)">' + (s["SHIPPER NAME"]||"—") + '</td>',
+// SHIP ROW
+function shipRow(s,cols,isToday){
+  var rc=isToday?"release-today":"";
+  var isfBill  =s["ISF BILL MATCH DATE"]   ?'<span class="isf-match">'+s["ISF BILL MATCH DATE"]+'</span>':'<span style="color:var(--muted)">—</span>';
+  var isfNoBill=s["ISF NO BILL MATCH DATE"]?'<span class="isf-nomatch">'+s["ISF NO BILL MATCH DATE"]+'</span>':'<span style="color:var(--muted)">—</span>';
+  var duty=s["DUTY BILLED"]?"$"+parseFloat(s["DUTY BILLED"]).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}):"—";
+  var cells=[
+    '<td><span class="ref-link" onclick=\'openModal("'+esc(s["REFERENCE NO"])+'")\'>'+( s["REFERENCE NO"]||"—")+'</span></td>',
+    '<td class="mono">'+(s["ENTRY NUMBER"]||"—")+'</td>',
+    '<td style="font-weight:500">'+(s["IMPORTER NAME"]||"—")+'</td>',
+    '<td style="color:var(--muted)">'+(s["SHIPPER NAME"]||"—")+'</td>',
   ];
-
-  if (!isToday) cells.push('<td class="mono">' + (s["ETA DATE"]||"—") + '</td>');
-  if (!isToday) cells.push('<td class="mono">' + (s["ACTUAL ARRIVAL DATE"]||"—") + '</td>');
-
-  cells = cells.concat([
-    '<td class="mono ' + releaseClass + '">' + (s["CHB CARGO RELEASE DATE"]||"—") + '</td>',
-    '<td style="color:var(--muted);font-size:10px">' + (s["CHB PORT OF DCHG NAME"]||"—") + '</td>',
-    '<td class="mono">' + isfBill + '</td>',
-    '<td class="mono">' + isfNoBill + '</td>',
-    '<td style="color:var(--muted);font-size:10px;max-width:160px;overflow:hidden;text-overflow:ellipsis">' + (s["CONTAINER NUMBERS"]||"—") + '</td>',
-    '<td class="mono">' + duty + '</td>',
+  if(!isToday)cells.push('<td class="mono">'+(s["ETA DATE"]||"—")+'</td>');
+  if(!isToday)cells.push('<td class="mono">'+(s["ACTUAL ARRIVAL DATE"]||"—")+'</td>');
+  cells=cells.concat([
+    '<td class="mono '+rc+'">'+(s["CHB CARGO RELEASE DATE"]||"—")+'</td>',
+    '<td style="color:var(--muted);font-size:11px">'+(s["CHB PORT OF DCHG NAME"]||"—")+'</td>',
+    '<td class="mono">'+isfBill+'</td>',
+    '<td class="mono">'+isfNoBill+'</td>',
+    '<td style="color:var(--muted);font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis">'+(s["CONTAINER NUMBERS"]||"—")+'</td>',
+    '<td class="mono">'+duty+'</td>',
   ]);
-
-  return '<tr>' + cells.join("") + '</tr>';
+  return '<tr>'+cells.join("")+'</tr>';
 }
 
-// ── Shipment detail modal
-function openModal(refNo) {
-  var s = allShipments.filter(function(x){ return x["REFERENCE NO"] === refNo; })[0];
-  if (!s) return;
-
-  document.getElementById("modalTitle").textContent = "Ref: " + refNo;
-  document.getElementById("modalSub").textContent = (s["IMPORTER NAME"]||"") + " · " + (s["ENTRY NUMBER"]||"") + " · " + (s["CHB PORT OF DCHG NAME"]||"");
-
-  function field(label, value, cls) {
-    return '<div class="modal-field"><div class="mf-label">' + label + '</div><div class="mf-value ' + (cls||"") + '">' + (value||"—") + '</div></div>';
-  }
-
-  document.getElementById("modalOverview").innerHTML =
-    field("Reference No",     s["REFERENCE NO"],          "highlight") +
-    field("Entry Number",     s["ENTRY NUMBER"],           "highlight") +
-    field("Entry Type",       s["ENTRY TYPE"]) +
-    field("Importer",         s["IMPORTER NAME"]) +
-    field("Shipper",          s["SHIPPER NAME"]) +
-    field("Discharge Port",   s["CHB PORT OF DCHG NAME"]) +
-    field("Master B/L",       s["BL NUMBER MASTER"]) +
-    field("House B/L",        s["MANIFEST HOUSE B/L NUMBER"]) +
-    field("Port Code",        s["ENTRY PORT CODE"]);
-
-  document.getElementById("modalDates").innerHTML =
-    field("ETA Date",            s["ETA DATE"],            "highlight") +
-    field("Actual Arrival",      s["ACTUAL ARRIVAL DATE"]) +
-    field("Est. Arrival",        s["ESTIMATED ARRIVAL DATE"]) +
-    field("Cargo Release",       s["CHB CARGO RELEASE DATE"], s["CHB CARGO RELEASE DATE"] ? "good" : "") +
-    field("ISF Bill Match",      s["ISF BILL MATCH DATE"],    s["ISF BILL MATCH DATE"] ? "good" : "") +
-    field("ISF No Bill Match",   s["ISF NO BILL MATCH DATE"], s["ISF NO BILL MATCH DATE"] ? "warn" : "");
-
-  document.getElementById("modalCargo").innerHTML =
-    field("Container Numbers",   s["CONTAINER NUMBERS"]) +
-    field("Container Types",     s["CONTAINER TYPES"]) +
-    field("Total CBM",           s["TOTAL CBM"] ? s["TOTAL CBM"] + " CBM" : "") +
-    field("Total Weight",        s["TOTAL WEIGHT LBS"] ? parseFloat(s["TOTAL WEIGHT LBS"]).toLocaleString() + " lbs" : "") +
-    field("Country of Origin",   s["COUNTRY OF ORIGIN"]) +
-    field("HTS Descriptions",    s["HTS DESCRIPTIONS"]);
-
-  document.getElementById("modalCHB").innerHTML =
-    field("Duty Billed",         s["DUTY BILLED"] ? "$" + parseFloat(s["DUTY BILLED"]).toLocaleString(undefined,{minimumFractionDigits:2}) : "") +
-    field("CHB Duty",            s["CHB DUTY"] ? "$" + parseFloat(s["CHB DUTY"]).toLocaleString(undefined,{minimumFractionDigits:2}) : "") +
-    field("Total MPF",           s["TOTAL MPF"] ? "$" + parseFloat(s["TOTAL MPF"]).toLocaleString(undefined,{minimumFractionDigits:2}) : "") +
-    field("Total HMF",           s["TOTAL HMF"] ? "$" + parseFloat(s["TOTAL HMF"]).toLocaleString(undefined,{minimumFractionDigits:2}) : "");
-
+// MODAL
+function openModal(refNo){
+  var s=allShipments.filter(function(x){return x["REFERENCE NO"]===refNo;})[0];
+  if(!s)return;
+  document.getElementById("modalTitle").textContent="Ref: "+refNo;
+  document.getElementById("modalSub").textContent=(s["IMPORTER NAME"]||"")+" · "+(s["ENTRY NUMBER"]||"")+" · "+(s["CHB PORT OF DCHG NAME"]||"");
+  function f(label,value,cls){return'<div class="mf"><div class="mf-label">'+label+'</div><div class="mf-value '+(cls||"")+'">'+( value||"—")+'</div></div>';}
+  document.getElementById("modalOverview").innerHTML=
+    f("Reference No",s["REFERENCE NO"],"hi")+f("Entry Number",s["ENTRY NUMBER"],"hi")+f("Entry Type",s["ENTRY TYPE"])+
+    f("Importer",s["IMPORTER NAME"])+f("Shipper",s["SHIPPER NAME"])+f("Discharge Port",s["CHB PORT OF DCHG NAME"])+
+    f("Master B/L",s["BL NUMBER MASTER"])+f("House B/L",s["MANIFEST HOUSE B/L NUMBER"])+f("Port Code",s["ENTRY PORT CODE"]);
+  document.getElementById("modalDates").innerHTML=
+    f("ETA Date",s["ETA DATE"],"hi")+f("Actual Arrival",s["ACTUAL ARRIVAL DATE"])+f("Est. Arrival",s["ESTIMATED ARRIVAL DATE"])+
+    f("Cargo Release",s["CHB CARGO RELEASE DATE"],s["CHB CARGO RELEASE DATE"]?"good":"")+
+    f("ISF Bill Match",s["ISF BILL MATCH DATE"],s["ISF BILL MATCH DATE"]?"good":"")+
+    f("ISF No Bill Match",s["ISF NO BILL MATCH DATE"],s["ISF NO BILL MATCH DATE"]?"warn":"");
+  document.getElementById("modalCargo").innerHTML=
+    f("Container Numbers",s["CONTAINER NUMBERS"])+f("Container Types",s["CONTAINER TYPES"])+
+    f("Total CBM",s["TOTAL CBM"]?s["TOTAL CBM"]+" CBM":"")+
+    f("Total Weight",s["TOTAL WEIGHT LBS"]?parseFloat(s["TOTAL WEIGHT LBS"]).toLocaleString()+" lbs":"")+
+    f("Country of Origin",s["COUNTRY OF ORIGIN"])+f("HTS Descriptions",s["HTS DESCRIPTIONS"]);
+  document.getElementById("modalCHB").innerHTML=
+    f("Duty Billed",s["DUTY BILLED"]?"$"+parseFloat(s["DUTY BILLED"]).toLocaleString(undefined,{minimumFractionDigits:2}):"")+
+    f("CHB Duty",s["CHB DUTY"]?"$"+parseFloat(s["CHB DUTY"]).toLocaleString(undefined,{minimumFractionDigits:2}):"")+
+    f("Total MPF",s["TOTAL MPF"]?"$"+parseFloat(s["TOTAL MPF"]).toLocaleString(undefined,{minimumFractionDigits:2}):"")+
+    f("Total HMF",s["TOTAL HMF"]?"$"+parseFloat(s["TOTAL HMF"]).toLocaleString(undefined,{minimumFractionDigits:2}):"");
   document.getElementById("modalOverlay").classList.add("open");
 }
+function closeModal(e){if(e.target===document.getElementById("modalOverlay"))closeModalDirect();}
+function closeModalDirect(){document.getElementById("modalOverlay").classList.remove("open");}
 
-function closeModal(e) { if (e.target === document.getElementById("modalOverlay")) closeModalDirect(); }
-function closeModalDirect() { document.getElementById("modalOverlay").classList.remove("open"); }
-
-// ── Date helpers
-function todayStr() {
-  var d = new Date();
-  return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
-}
-function normalizeDate(str) {
-  if (!str) return "";
-  str = str.trim();
-  // Handle M/D/YYYY or MM/DD/YYYY
-  var m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (m) return m[3] + "-" + pad(m[1]) + "-" + pad(m[2]);
-  // Already YYYY-MM-DD
-  if (str.match(/^\d{4}-\d{2}-\d{2}/)) return str.substring(0,10);
-  return str;
-}
-function pad(n) { return n < 10 ? "0" + n : "" + n; }
-function esc(s) { return (s||"").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
-
-// ── Wire storeShipments into renderAll
-
-var STORAGE_KEY = "logisticsPanelPrefs";
-
-var ALL_PANELS = [
-  "smh26_total","smh26_month","smh26_importers","smh26_duty","smh26_mpf","smh26_ports",
-  "ctn_total","ctn_cbm","ctn_weight","ctn_pieces","ctn_types","ctn_statuses","ctn_contents",
-  "chb_total","chb_released","chb_pending","chb_avgduty","chb_duty","chb_countries","chb_release_donut"
-];
-
-function toggleDrawer() {
-  document.getElementById("drawer").classList.toggle("open");
-  document.getElementById("drawerOverlay").classList.toggle("open");
+// DONUT
+function renderDonut(released,pending,total){
+  if(!total)return;
+  var circ=2*Math.PI*35;
+  var rd=(released/total)*circ, pd=(pending/total)*circ;
+  document.getElementById("donutReleased").setAttribute("stroke-dasharray",rd+" "+circ);
+  document.getElementById("donutReleased").setAttribute("stroke-dashoffset",circ/4);
+  document.getElementById("donutPending").setAttribute("stroke-dasharray",pd+" "+circ);
+  document.getElementById("donutPending").setAttribute("stroke-dashoffset",(circ/4)-rd);
 }
 
-function loadPanelPrefs() {
-  var saved = localStorage.getItem(STORAGE_KEY);
-  var prefs  = saved ? JSON.parse(saved) : null;
-  // Default: all on
-  if (!prefs) {
-    prefs = {};
-    ALL_PANELS.forEach(function(p){ prefs[p] = true; });
-  }
-  ALL_PANELS.forEach(function(panel) {
-    var isOn = prefs[panel] !== false;
-    applyPanel(panel, isOn);
-    var cb = document.querySelector('input[data-panel="' + panel + '"]');
-    if (cb) cb.checked = isOn;
-  });
+// BAR LIST
+function renderBars(id,str){
+  var el=document.getElementById(id);if(!el)return;
+  var items=parseTopN(str);
+  if(!items.length){el.innerHTML='<li style="color:var(--muted);font-size:11px">No data yet</li>';return;}
+  var max=items[0].count;
+  el.innerHTML=items.map(function(item){
+    var pct=max>0?(item.count/max*100).toFixed(0):0;
+    return'<li><span class="bar-label" title="'+item.label+'">'+item.label+'</span><span class="bar-track"><span class="bar-fill" style="width:'+pct+'%"></span></span><span class="bar-count">'+item.count+'</span></li>';
+  }).join("");
 }
 
-function togglePanel(checkbox) {
-  var panel = checkbox.getAttribute("data-panel");
-  var isOn  = checkbox.checked;
-  applyPanel(panel, isOn);
-  // Save prefs
-  var saved = localStorage.getItem(STORAGE_KEY);
-  var prefs  = saved ? JSON.parse(saved) : {};
-  prefs[panel] = isOn;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+// CHIPS
+function renderChips(id,items){
+  var el=document.getElementById(id);if(!el)return;
+  var colors=["blue","green","orange","teal","red"];
+  if(!items.length){el.innerHTML='<span class="chip blue">No data</span>';return;}
+  el.innerHTML=items.map(function(item,i){return'<span class="chip '+colors[i%colors.length]+'">'+item.label+' · '+item.count+'</span>';}).join("");
 }
 
-function applyPanel(panel, isOn) {
-  var els = document.querySelectorAll('[data-panel="' + panel + '"]');
-  els.forEach(function(el) {
-    el.classList.toggle("hidden", !isOn);
-  });
+// HELPERS
+function parseTopN(str){
+  if(!str)return[];
+  return str.toString().split("|").filter(Boolean).map(function(s){var p=s.split(":");var c=parseInt(p.pop())||0;return{label:p.join(":").trim(),count:c};}).filter(function(i){return i.label;});
 }
+function set(id,val){var el=document.getElementById(id);if(el)el.textContent=val!==undefined&&val!==null?val:"—";}
+function fmt(v){return v!==undefined&&v!==null&&v!==""?parseInt(v).toLocaleString():"—";}
+function num(v,dec){var n=parseFloat(v);return isNaN(n)?"—":n.toLocaleString(undefined,{minimumFractionDigits:dec,maximumFractionDigits:dec});}
+function money(v){var n=parseFloat(v);return isNaN(n)||n===0?"$0":"$"+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function setStatus(state,text){document.getElementById("statusPill").className="status-pill "+(state==="active"?"":state);document.getElementById("statusText").textContent=text;}
+function todayStr(){var d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+function normalizeDate(str){if(!str)return"";str=str.trim();var m=str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return m[3]+"-"+pad(m[1])+"-"+pad(m[2]);if(str.match(/^\d{4}-\d{2}-\d{2}/))return str.substring(0,10);return str;}
+function pad(n){return n<10?"0"+n:""+n;}
+function esc(s){return(s||"").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
 
-function resetPanels() {
-  localStorage.removeItem(STORAGE_KEY);
-  loadPanelPrefs();
-}
-
-// Initialize panel prefs on load
+// PANEL PREFS
+var STORAGE_KEY="logisticsPanelPrefs";
+var ALL_PANELS=["smh26_total","smh26_month","smh26_importers","smh26_duty","smh26_mpf","smh26_ports","ctn_total","ctn_cbm","ctn_weight","ctn_pieces","ctn_types","ctn_statuses","ctn_contents","chb_total","chb_released","chb_pending","chb_avgduty","chb_duty","chb_countries","chb_release_donut"];
+function toggleDrawer(){document.getElementById("drawer").classList.toggle("open");document.getElementById("drawerOverlay").classList.toggle("open");}
+function loadPanelPrefs(){var saved=localStorage.getItem(STORAGE_KEY);var prefs=saved?JSON.parse(saved):null;if(!prefs){prefs={};ALL_PANELS.forEach(function(p){prefs[p]=true;});}ALL_PANELS.forEach(function(panel){var isOn=prefs[panel]!==false;applyPanel(panel,isOn);var cb=document.querySelector('input[data-panel="'+panel+'"]');if(cb)cb.checked=isOn;});}
+function togglePanel(cb){var panel=cb.getAttribute("data-panel");var isOn=cb.checked;applyPanel(panel,isOn);var saved=localStorage.getItem(STORAGE_KEY);var prefs=saved?JSON.parse(saved):{};prefs[panel]=isOn;localStorage.setItem(STORAGE_KEY,JSON.stringify(prefs));}
+function applyPanel(panel,isOn){document.querySelectorAll('[data-panel="'+panel+'"]').forEach(function(el){el.classList.toggle("hidden",!isOn);});}
+function resetPanels(){localStorage.removeItem(STORAGE_KEY);loadPanelPrefs();}
 loadPanelPrefs();
 </script>
 </body>
