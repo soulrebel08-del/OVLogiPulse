@@ -127,6 +127,61 @@
 
   [data-panel].hidden { display: none !important; }
 
+  /* FILTER BAR */
+  .filter-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .filter-group { display: flex; flex-direction: column; gap: 5px; }
+  .filter-group label { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+  .filter-group input, .filter-group select { background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text); padding: 7px 12px; border-radius: 7px; font-family: 'Space Mono', monospace; font-size: 11px; outline: none; transition: border-color .2s; min-width: 160px; }
+  .filter-group input:focus, .filter-group select:focus { border-color: var(--accent); }
+  .filter-group select option { background: var(--surface); }
+  .filter-btn { padding: 7px 16px; border-radius: 7px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all .2s; }
+  .filter-btn.apply { background: var(--accent3); color: #fff; }
+  .filter-btn.apply:hover { background: #6d28d9; }
+  .filter-btn.clear  { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .filter-btn.clear:hover  { border-color: var(--accent); color: var(--accent); }
+  .filter-results-count { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); align-self: center; margin-left: auto; }
+
+  /* SEARCH BAR */
+  .search-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
+  .search-bar input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text); padding: 10px 16px; border-radius: 8px; font-family: 'Space Mono', monospace; font-size: 12px; outline: none; transition: border-color .2s; }
+  .search-bar input:focus { border-color: var(--accent); }
+  .search-bar button { padding: 10px 20px; background: var(--accent); color: #000; border: none; border-radius: 8px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity .2s; }
+  .search-bar button:hover { opacity: 0.85; }
+
+  /* TODAY'S RELEASES */
+  .releases-count-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: var(--new); padding: 3px 12px; border-radius: 100px; font-family: 'Space Mono', monospace; font-size: 11px; }
+
+  /* SHIPMENT TABLE */
+  .ship-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: auto; max-height: 420px; }
+  .ship-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 900px; }
+  .ship-table thead th { background: rgba(0,0,0,0.4); padding: 10px 14px; text-align: left; font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); white-space: nowrap; position: sticky; top: 0; z-index: 1; }
+  .ship-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; }
+  .ship-table tbody tr:hover { background: rgba(0,229,255,0.05); }
+  .ship-table tbody tr:last-child { border-bottom: none; }
+  .ship-table tbody td { padding: 9px 14px; color: var(--text); vertical-align: middle; white-space: nowrap; }
+  .ship-table tbody td.mono { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); }
+  .ship-table .release-today { color: var(--new); font-weight: 700; }
+  .ship-table .isf-match { color: var(--new); }
+  .ship-table .isf-nomatch { color: var(--updated); }
+  .ship-table .no-data { text-align: center; color: var(--muted); padding: 32px; font-family: 'Space Mono', monospace; font-size: 11px; }
+
+  /* SHIPMENT DETAIL MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; backdrop-filter: blur(4px); align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; width: 90%; max-width: 860px; max-height: 85vh; overflow-y: auto; padding: 28px 32px; position: relative; }
+  .modal-close { position: absolute; top: 16px; right: 20px; background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+  .modal-close:hover { color: var(--text); }
+  .modal h3 { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+  .modal .modal-sub { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); margin-bottom: 24px; }
+  .modal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .modal-field { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  .modal-field .mf-label { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .modal-field .mf-value { font-size: 13px; color: var(--text); font-weight: 600; word-break: break-word; }
+  .modal-field .mf-value.highlight { color: var(--accent); }
+  .modal-field .mf-value.good { color: var(--new); }
+  .modal-field .mf-value.warn { color: var(--updated); }
+  .modal-section-title { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin: 16px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+
   footer { text-align: center; padding: 20px; font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 24px; }
 
   @media (max-width: 900px) {
@@ -255,6 +310,123 @@
     </div>
   </div>
 
+  <!-- ═══════════════ FILTER BAR ═══════════════ -->
+  <div class="filter-bar" id="filterBar">
+    <div class="filter-group">
+      <label>ETA Date From</label>
+      <input type="date" id="filterEtaFrom">
+    </div>
+    <div class="filter-group">
+      <label>ETA Date To</label>
+      <input type="date" id="filterEtaTo">
+    </div>
+    <div class="filter-group">
+      <label>ISF Status</label>
+      <select id="filterISF">
+        <option value="">All</option>
+        <option value="bill_match">ISF Bill Match</option>
+        <option value="no_bill_match">ISF No Bill Match</option>
+        <option value="neither">Neither</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Importer</label>
+      <input type="text" id="filterImporter" placeholder="e.g. AMERICAN COLORS">
+    </div>
+    <button class="filter-btn apply" onclick="applyFilters()">Apply Filters</button>
+    <button class="filter-btn clear" onclick="clearFilters()">Clear</button>
+    <span class="filter-results-count" id="filterCount"></span>
+  </div>
+
+  <!-- ═══════════════ TODAY'S CARGO RELEASES ═══════════════ -->
+  <div class="section-header">
+    <h2>📬 Today's Cargo Releases</h2>
+    <div class="line"></div>
+    <span class="releases-count-badge"><span id="todayReleaseCount">—</span> shipments</span>
+  </div>
+  <div class="ship-table-wrap" id="todayReleasesWrap">
+    <table class="ship-table">
+      <thead>
+        <tr>
+          <th>Ref No</th><th>Entry No</th><th>Importer</th><th>Shipper</th>
+          <th>Release Date</th><th>ETA</th><th>Port</th>
+          <th>ISF Bill Match</th><th>ISF No Bill Match</th>
+          <th>Containers</th><th>Duty Billed</th>
+        </tr>
+      </thead>
+      <tbody id="todayReleasesBody">
+        <tr><td colspan="11" class="no-data">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════ SEARCH BY HOUSE B/L ═══════════════ -->
+  <div class="section-header" style="margin-top:28px">
+    <h2>🔍 Search by House B/L Number</h2>
+    <div class="line"></div>
+  </div>
+  <div class="search-bar">
+    <input type="text" id="blSearchInput" placeholder="Enter House B/L Number (e.g. 2026000168)" onkeydown="if(event.key==='Enter') searchBL()">
+    <button onclick="searchBL()">Search</button>
+  </div>
+  <div id="blSearchResults" style="display:none">
+    <div class="ship-table-wrap">
+      <table class="ship-table">
+        <thead>
+          <tr>
+            <th>Ref No</th><th>Entry No</th><th>Importer</th><th>Shipper</th>
+            <th>ETA</th><th>Actual Arrival</th><th>Release Date</th><th>Port</th>
+            <th>ISF Bill Match</th><th>ISF No Bill Match</th>
+            <th>Containers</th><th>Duty Billed</th>
+          </tr>
+        </thead>
+        <tbody id="blSearchBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════ FILTERED SHIPMENTS TABLE ═══════════════ -->
+  <div class="section-header" style="margin-top:28px" id="filteredSection" style="display:none">
+    <h2>📋 Filtered Shipments</h2>
+    <div class="line"></div>
+  </div>
+  <div id="filteredTableWrap" style="display:none">
+    <div class="ship-table-wrap">
+      <table class="ship-table">
+        <thead>
+          <tr>
+            <th>Ref No</th><th>Entry No</th><th>Importer</th><th>Shipper</th>
+            <th>ETA</th><th>Actual Arrival</th><th>Release Date</th><th>Port</th>
+            <th>ISF Bill Match</th><th>ISF No Bill Match</th>
+            <th>Containers</th><th>Duty Billed</th>
+          </tr>
+        </thead>
+        <tbody id="filteredBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SHIPMENT DETAIL MODAL ═══════════════ -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal" id="shipModal">
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+      <h3 id="modalTitle">Shipment Detail</h3>
+      <div class="modal-sub" id="modalSub"></div>
+
+      <div class="modal-section-title">📦 Shipment Overview</div>
+      <div class="modal-grid" id="modalOverview"></div>
+
+      <div class="modal-section-title">📅 Key Dates</div>
+      <div class="modal-grid" id="modalDates"></div>
+
+      <div class="modal-section-title">🚢 Container & Cargo</div>
+      <div class="modal-grid" id="modalCargo"></div>
+
+      <div class="modal-section-title">📋 CHB / Customs</div>
+      <div class="modal-grid" id="modalCHB"></div>
+    </div>
+  </div>
+
   <!-- ═══════════════ CUSTOMIZE DRAWER ═══════════════ -->
   <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
   <div class="drawer" id="drawer">
@@ -377,6 +549,7 @@ function renderAll(data) {
 
   renderBars("chbCountryBars", k.chb_top_countries);
   renderDonut(released, pending, total);
+  storeShipments(data);
 }
 
 // ── Donut chart
@@ -438,7 +611,188 @@ function setStatus(state, text) {
   pill.className = "status-pill " + (state === "active" ? "" : state);
   document.getElementById("statusText").textContent = text;
 }
-// ── Drawer & panel toggles
+// ── Shipment data store
+var allShipments = [];
+
+function storeShipments(data) {
+  allShipments = data.shipments || [];
+  renderTodayReleases();
+}
+
+// ── Today's releases
+function renderTodayReleases() {
+  var today = todayStr();
+  var releases = allShipments.filter(function(s) {
+    return normalizeDate(s["CHB CARGO RELEASE DATE"]) === today;
+  });
+  document.getElementById("todayReleaseCount").textContent = releases.length;
+  var tbody = document.getElementById("todayReleasesBody");
+  if (!releases.length) {
+    tbody.innerHTML = '<tr><td colspan="11" class="no-data">No cargo releases today (' + today + ')</td></tr>';
+    return;
+  }
+  tbody.innerHTML = releases.map(function(s) { return shipRow(s, 11, true); }).join("");
+}
+
+// ── Filters
+function applyFilters() {
+  var etaFrom   = document.getElementById("filterEtaFrom").value;
+  var etaTo     = document.getElementById("filterEtaTo").value;
+  var isfFilter = document.getElementById("filterISF").value;
+  var importer  = document.getElementById("filterImporter").value.trim().toUpperCase();
+
+  var results = allShipments.filter(function(s) {
+    var eta = normalizeDate(s["ETA DATE"]);
+    if (etaFrom && eta < etaFrom) return false;
+    if (etaTo   && eta > etaTo)   return false;
+    if (importer && s["IMPORTER NAME"].toUpperCase().indexOf(importer) === -1) return false;
+    if (isfFilter === "bill_match"    && !s["ISF BILL MATCH DATE"])    return false;
+    if (isfFilter === "no_bill_match" && !s["ISF NO BILL MATCH DATE"]) return false;
+    if (isfFilter === "neither" && (s["ISF BILL MATCH DATE"] || s["ISF NO BILL MATCH DATE"])) return false;
+    return true;
+  });
+
+  document.getElementById("filterCount").textContent = results.length + " result" + (results.length !== 1 ? "s" : "");
+  document.getElementById("filteredSection").style.display = "";
+  document.getElementById("filteredTableWrap").style.display = "";
+
+  var tbody = document.getElementById("filteredBody");
+  if (!results.length) {
+    tbody.innerHTML = '<tr><td colspan="12" class="no-data">No shipments match the selected filters</td></tr>';
+    return;
+  }
+  tbody.innerHTML = results.map(function(s) { return shipRow(s, 12, false); }).join("");
+}
+
+function clearFilters() {
+  document.getElementById("filterEtaFrom").value = "";
+  document.getElementById("filterEtaTo").value   = "";
+  document.getElementById("filterISF").value      = "";
+  document.getElementById("filterImporter").value = "";
+  document.getElementById("filterCount").textContent = "";
+  document.getElementById("filteredSection").style.display = "none";
+  document.getElementById("filteredTableWrap").style.display = "none";
+}
+
+// ── B/L Search
+function searchBL() {
+  var query = document.getElementById("blSearchInput").value.trim().toUpperCase();
+  if (!query) return;
+
+  var results = allShipments.filter(function(s) {
+    return (s["MANIFEST HOUSE B/L NUMBER"] || "").toUpperCase().indexOf(query) !== -1 ||
+           (s["BL NUMBER MASTER"] || "").toUpperCase().indexOf(query) !== -1;
+  });
+
+  document.getElementById("blSearchResults").style.display = "";
+  var tbody = document.getElementById("blSearchBody");
+  if (!results.length) {
+    tbody.innerHTML = '<tr><td colspan="12" class="no-data">No results found for "' + query + '"</td></tr>';
+    return;
+  }
+  tbody.innerHTML = results.map(function(s) { return shipRow(s, 12, false); }).join("");
+}
+
+// ── Build a table row (cols = 11 for today's releases, 12 for others)
+function shipRow(s, cols, isToday) {
+  var releaseClass = isToday ? "release-today" : "";
+  var isfBill   = s["ISF BILL MATCH DATE"]    ? '<span class="isf-match">'   + s["ISF BILL MATCH DATE"]    + '</span>' : '<span style="color:var(--muted)">—</span>';
+  var isfNoBill = s["ISF NO BILL MATCH DATE"] ? '<span class="isf-nomatch">' + s["ISF NO BILL MATCH DATE"] + '</span>' : '<span style="color:var(--muted)">—</span>';
+  var duty = s["DUTY BILLED"] ? "$" + parseFloat(s["DUTY BILLED"]).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}) : "—";
+
+  var cells = [
+    '<td class="mono" style="cursor:pointer;color:var(--accent)" onclick=\'openModal("' + esc(s["REFERENCE NO"]) + '")\'>' + (s["REFERENCE NO"]||"—") + '</td>',
+    '<td class="mono">' + (s["ENTRY NUMBER"]||"—") + '</td>',
+    '<td>' + (s["IMPORTER NAME"]||"—") + '</td>',
+    '<td style="color:var(--muted)">' + (s["SHIPPER NAME"]||"—") + '</td>',
+  ];
+
+  if (!isToday) cells.push('<td class="mono">' + (s["ETA DATE"]||"—") + '</td>');
+  if (!isToday) cells.push('<td class="mono">' + (s["ACTUAL ARRIVAL DATE"]||"—") + '</td>');
+
+  cells = cells.concat([
+    '<td class="mono ' + releaseClass + '">' + (s["CHB CARGO RELEASE DATE"]||"—") + '</td>',
+    '<td style="color:var(--muted);font-size:10px">' + (s["CHB PORT OF DCHG NAME"]||"—") + '</td>',
+    '<td class="mono">' + isfBill + '</td>',
+    '<td class="mono">' + isfNoBill + '</td>',
+    '<td style="color:var(--muted);font-size:10px;max-width:160px;overflow:hidden;text-overflow:ellipsis">' + (s["CONTAINER NUMBERS"]||"—") + '</td>',
+    '<td class="mono">' + duty + '</td>',
+  ]);
+
+  return '<tr>' + cells.join("") + '</tr>';
+}
+
+// ── Shipment detail modal
+function openModal(refNo) {
+  var s = allShipments.filter(function(x){ return x["REFERENCE NO"] === refNo; })[0];
+  if (!s) return;
+
+  document.getElementById("modalTitle").textContent = "Ref: " + refNo;
+  document.getElementById("modalSub").textContent = (s["IMPORTER NAME"]||"") + " · " + (s["ENTRY NUMBER"]||"") + " · " + (s["CHB PORT OF DCHG NAME"]||"");
+
+  function field(label, value, cls) {
+    return '<div class="modal-field"><div class="mf-label">' + label + '</div><div class="mf-value ' + (cls||"") + '">' + (value||"—") + '</div></div>';
+  }
+
+  document.getElementById("modalOverview").innerHTML =
+    field("Reference No",     s["REFERENCE NO"],          "highlight") +
+    field("Entry Number",     s["ENTRY NUMBER"],           "highlight") +
+    field("Entry Type",       s["ENTRY TYPE"]) +
+    field("Importer",         s["IMPORTER NAME"]) +
+    field("Shipper",          s["SHIPPER NAME"]) +
+    field("Discharge Port",   s["CHB PORT OF DCHG NAME"]) +
+    field("Master B/L",       s["BL NUMBER MASTER"]) +
+    field("House B/L",        s["MANIFEST HOUSE B/L NUMBER"]) +
+    field("Port Code",        s["ENTRY PORT CODE"]);
+
+  document.getElementById("modalDates").innerHTML =
+    field("ETA Date",            s["ETA DATE"],            "highlight") +
+    field("Actual Arrival",      s["ACTUAL ARRIVAL DATE"]) +
+    field("Est. Arrival",        s["ESTIMATED ARRIVAL DATE"]) +
+    field("Cargo Release",       s["CHB CARGO RELEASE DATE"], s["CHB CARGO RELEASE DATE"] ? "good" : "") +
+    field("ISF Bill Match",      s["ISF BILL MATCH DATE"],    s["ISF BILL MATCH DATE"] ? "good" : "") +
+    field("ISF No Bill Match",   s["ISF NO BILL MATCH DATE"], s["ISF NO BILL MATCH DATE"] ? "warn" : "");
+
+  document.getElementById("modalCargo").innerHTML =
+    field("Container Numbers",   s["CONTAINER NUMBERS"]) +
+    field("Container Types",     s["CONTAINER TYPES"]) +
+    field("Total CBM",           s["TOTAL CBM"] ? s["TOTAL CBM"] + " CBM" : "") +
+    field("Total Weight",        s["TOTAL WEIGHT LBS"] ? parseFloat(s["TOTAL WEIGHT LBS"]).toLocaleString() + " lbs" : "") +
+    field("Country of Origin",   s["COUNTRY OF ORIGIN"]) +
+    field("HTS Descriptions",    s["HTS DESCRIPTIONS"]);
+
+  document.getElementById("modalCHB").innerHTML =
+    field("Duty Billed",         s["DUTY BILLED"] ? "$" + parseFloat(s["DUTY BILLED"]).toLocaleString(undefined,{minimumFractionDigits:2}) : "") +
+    field("CHB Duty",            s["CHB DUTY"] ? "$" + parseFloat(s["CHB DUTY"]).toLocaleString(undefined,{minimumFractionDigits:2}) : "") +
+    field("Total MPF",           s["TOTAL MPF"] ? "$" + parseFloat(s["TOTAL MPF"]).toLocaleString(undefined,{minimumFractionDigits:2}) : "") +
+    field("Total HMF",           s["TOTAL HMF"] ? "$" + parseFloat(s["TOTAL HMF"]).toLocaleString(undefined,{minimumFractionDigits:2}) : "");
+
+  document.getElementById("modalOverlay").classList.add("open");
+}
+
+function closeModal(e) { if (e.target === document.getElementById("modalOverlay")) closeModalDirect(); }
+function closeModalDirect() { document.getElementById("modalOverlay").classList.remove("open"); }
+
+// ── Date helpers
+function todayStr() {
+  var d = new Date();
+  return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
+}
+function normalizeDate(str) {
+  if (!str) return "";
+  str = str.trim();
+  // Handle M/D/YYYY or MM/DD/YYYY
+  var m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return m[3] + "-" + pad(m[1]) + "-" + pad(m[2]);
+  // Already YYYY-MM-DD
+  if (str.match(/^\d{4}-\d{2}-\d{2}/)) return str.substring(0,10);
+  return str;
+}
+function pad(n) { return n < 10 ? "0" + n : "" + n; }
+function esc(s) { return (s||"").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+
+// ── Wire storeShipments into renderAll
+
 var STORAGE_KEY = "logisticsPanelPrefs";
 
 var ALL_PANELS = [
