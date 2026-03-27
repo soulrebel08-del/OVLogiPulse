@@ -36,6 +36,7 @@
   .logo-block h1 span { color: var(--accent); }
   .logo-block p { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 5px; letter-spacing: 2px; text-transform: uppercase; }
   .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .header-buttons { display: flex; gap: 8px; }
   .status-pill { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); padding: 5px 13px; border-radius: 100px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
   .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--new); animation: pulse 2s ease-in-out infinite; }
   .status-pill.error .dot { background: var(--error); animation: none; }
@@ -94,21 +95,37 @@
   .donut-legend .leg-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }
   .donut-legend .leg-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-  /* LOG TABLE */
-  .log-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-top: 8px; }
-  table { width: 100%; border-collapse: collapse; font-size: 11px; }
-  thead th { background: rgba(0,0,0,0.3); padding: 10px 14px; text-align: left; font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid var(--border); }
-  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: rgba(255,255,255,0.02); }
-  tbody td { padding: 9px 14px; color: var(--text); vertical-align: middle; }
-  tbody td.mono { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); }
-  tbody td a { color: var(--accent); text-decoration: none; }
+
 
   .refresh-btn { display: flex; align-items: center; gap: 7px; background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 7px 16px; border-radius: 7px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
   .refresh-btn:hover { background: rgba(0,229,255,0.1); }
   .refresh-btn.spinning svg { animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  .customize-btn { display: flex; align-items: center; gap: 7px; background: transparent; border: 1px solid var(--accent3); color: #a78bfa; padding: 7px 16px; border-radius: 7px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
+  .customize-btn:hover { background: rgba(124,58,237,0.1); }
+
+  /* DRAWER */
+  .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; backdrop-filter: blur(2px); }
+  .drawer-overlay.open { display: block; }
+  .drawer { position: fixed; top: 0; right: -380px; width: 360px; height: 100vh; background: var(--surface); border-left: 1px solid var(--border); z-index: 101; transition: right .3s cubic-bezier(.4,0,.2,1); overflow-y: auto; }
+  .drawer.open { right: 0; }
+  .drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 14px; position: sticky; top: 0; background: var(--surface); z-index: 1; }
+  .drawer-close { background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: color .2s; }
+  .drawer-close:hover { color: var(--text); }
+  .drawer-body { padding: 20px 24px; }
+  .drawer-section { margin-bottom: 24px; }
+  .drawer-section-title { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.04); cursor: pointer; font-size: 13px; color: var(--text); }
+  .toggle-row:last-of-type { border-bottom: none; }
+  .toggle-row input[type="checkbox"] { appearance: none; width: 36px; height: 20px; background: var(--border); border-radius: 100px; position: relative; cursor: pointer; transition: background .2s; flex-shrink: 0; }
+  .toggle-row input[type="checkbox"]:checked { background: var(--accent3); }
+  .toggle-row input[type="checkbox"]::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:left .2s; }
+  .toggle-row input[type="checkbox"]:checked::after { left:18px; }
+  .drawer-reset { width: 100%; padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 7px; font-family: 'Syne', sans-serif; font-size: 12px; cursor: pointer; margin-top: 8px; transition: all .2s; }
+  .drawer-reset:hover { border-color: var(--accent); color: var(--accent); }
+
+  [data-panel].hidden { display: none !important; }
 
   footer { text-align: center; padding: 20px; font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 24px; }
 
@@ -129,94 +146,98 @@
     <div class="header-right">
       <div class="status-pill idle" id="statusPill"><div class="dot"></div><span id="statusText">Not configured</span></div>
       <span id="lastChecked">—</span>
-      <button class="refresh-btn" id="refreshBtn" onclick="loadData()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-        </svg>
-        Refresh
-      </button>
+      <div class="header-buttons">
+        <button class="refresh-btn" id="refreshBtn" onclick="loadData()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+          </svg>
+          Refresh
+        </button>
+        <button class="customize-btn" onclick="toggleDrawer()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+          Customize
+        </button>
+      </div>
     </div>
   </header>
 
 
 
   <!-- ═══════════════ SHIPMENT (SMH26) ═══════════════ -->
-  <div class="section-header">
+  <div class="section-header" data-section="smh26">
     <h2>🚢 Shipments (SMH26)</h2>
     <div class="line"></div>
     <div class="tag" id="smh26Tag">—</div>
   </div>
 
-  <div class="stat-grid cols-5" id="smh26Stats">
-    <div class="kpi-card" style="--card-color:var(--accent)"><div class="kpi-label">Total Shipments</div><div class="kpi-value" id="smh26Total">—</div><div class="kpi-sub">all records</div></div>
-    <div class="kpi-card" style="--card-color:var(--new)"><div class="kpi-label">This Month</div><div class="kpi-value" id="smh26Month">—</div><div class="kpi-sub">opened this month</div></div>
-    <div class="kpi-card" style="--card-color:#a78bfa"><div class="kpi-label">Importers</div><div class="kpi-value" id="smh26Importers">—</div><div class="kpi-sub">unique</div></div>
-    <div class="kpi-card" style="--card-color:var(--accent2)"><div class="kpi-label">Total Duty Billed</div><div class="kpi-value sm" id="smh26Duty">—</div><div class="kpi-sub">USD</div></div>
-    <div class="kpi-card" style="--card-color:var(--updated)"><div class="kpi-label">Total MPF</div><div class="kpi-value sm" id="smh26MPF">—</div><div class="kpi-sub">merchandise processing</div></div>
+  <div class="stat-grid cols-5" id="smh26Stats" data-section="smh26">
+    <div class="kpi-card" style="--card-color:var(--accent)" data-panel="smh26_total"><div class="kpi-label">Total Shipments</div><div class="kpi-value" id="smh26Total">—</div><div class="kpi-sub">all records</div></div>
+    <div class="kpi-card" style="--card-color:var(--new)" data-panel="smh26_month"><div class="kpi-label">This Month</div><div class="kpi-value" id="smh26Month">—</div><div class="kpi-sub">opened this month</div></div>
+    <div class="kpi-card" style="--card-color:#a78bfa" data-panel="smh26_importers"><div class="kpi-label">Importers</div><div class="kpi-value" id="smh26Importers">—</div><div class="kpi-sub">unique</div></div>
+    <div class="kpi-card" style="--card-color:var(--accent2)" data-panel="smh26_duty"><div class="kpi-label">Total Duty Billed</div><div class="kpi-value sm" id="smh26Duty">—</div><div class="kpi-sub">USD</div></div>
+    <div class="kpi-card" style="--card-color:var(--updated)" data-panel="smh26_mpf"><div class="kpi-label">Total MPF</div><div class="kpi-value sm" id="smh26MPF">—</div><div class="kpi-sub">merchandise processing</div></div>
   </div>
 
-  <div class="stat-grid cols-2" style="margin-top:12px">
-    <div class="wide-card">
-      <h4>Top Importers</h4>
-      <ul class="bar-list" id="smh26ImporterBars" style="--bar-color:var(--accent)"></ul>
-    </div>
-    <div class="wide-card">
+  <div class="stat-grid cols-1" style="margin-top:12px">
+    <div class="wide-card" data-panel="smh26_ports">
       <h4>Top Discharge Ports</h4>
       <ul class="bar-list" id="smh26PortBars" style="--bar-color:#a78bfa"></ul>
     </div>
   </div>
 
   <!-- ═══════════════ CONTAINERS ═══════════════ -->
-  <div class="section-header">
+  <div class="section-header" data-section="container">
     <h2>📦 Containers</h2>
     <div class="line"></div>
     <div class="tag" id="containerTag">—</div>
   </div>
 
-  <div class="stat-grid cols-5">
-    <div class="kpi-card" style="--card-color:var(--accent2)"><div class="kpi-label">Total Containers</div><div class="kpi-value" id="ctnTotal">—</div><div class="kpi-sub">all records</div></div>
-    <div class="kpi-card" style="--card-color:var(--accent)"><div class="kpi-label">Total Volume</div><div class="kpi-value sm" id="ctnCBM">—</div><div class="kpi-sub">CBM</div></div>
-    <div class="kpi-card" style="--card-color:var(--new)"><div class="kpi-label">Total Weight</div><div class="kpi-value sm" id="ctnWeight">—</div><div class="kpi-sub">lbs</div></div>
-    <div class="kpi-card" style="--card-color:var(--updated)"><div class="kpi-label">Total Pieces</div><div class="kpi-value sm" id="ctnPieces">—</div><div class="kpi-sub">units</div></div>
-    <div class="kpi-card" style="--card-color:#a78bfa"><div class="kpi-label">Container Types</div><div class="kpi-value sm" id="ctnTypes" style="font-size:13px;padding-top:6px">—</div><div class="kpi-sub">breakdown</div></div>
+  <div class="stat-grid cols-5" data-section="container">
+    <div class="kpi-card" style="--card-color:var(--accent2)" data-panel="ctn_total"><div class="kpi-label">Total Containers</div><div class="kpi-value" id="ctnTotal">—</div><div class="kpi-sub">all records</div></div>
+    <div class="kpi-card" style="--card-color:var(--accent)" data-panel="ctn_cbm"><div class="kpi-label">Total Volume</div><div class="kpi-value sm" id="ctnCBM">—</div><div class="kpi-sub">CBM</div></div>
+    <div class="kpi-card" style="--card-color:var(--new)" data-panel="ctn_weight"><div class="kpi-label">Total Weight</div><div class="kpi-value sm" id="ctnWeight">—</div><div class="kpi-sub">lbs</div></div>
+    <div class="kpi-card" style="--card-color:var(--updated)" data-panel="ctn_pieces"><div class="kpi-label">Total Pieces</div><div class="kpi-value sm" id="ctnPieces">—</div><div class="kpi-sub">units</div></div>
+    <div class="kpi-card" style="--card-color:#a78bfa" data-panel="ctn_types"><div class="kpi-label">Container Types</div><div class="kpi-value sm" id="ctnTypes" style="font-size:13px;padding-top:6px">—</div><div class="kpi-sub">breakdown</div></div>
   </div>
 
-  <div class="stat-grid cols-2" style="margin-top:12px">
-    <div class="wide-card">
+  <div class="stat-grid cols-2" style="margin-top:12px" data-section="container">
+    <div class="wide-card" data-panel="ctn_statuses">
       <h4>Status Breakdown</h4>
       <div class="chip-list" id="ctnStatuses"></div>
     </div>
-    <div class="wide-card">
+    <div class="wide-card" data-panel="ctn_contents">
       <h4>Top Cargo Contents</h4>
       <ul class="bar-list" id="ctnContentBars" style="--bar-color:var(--accent2)"></ul>
     </div>
   </div>
 
   <!-- ═══════════════ CHB ENTRIES ═══════════════ -->
-  <div class="section-header">
+  <div class="section-header" data-section="chb">
     <h2>📋 CHB Entries</h2>
     <div class="line"></div>
     <div class="tag" id="chbTag">—</div>
   </div>
 
-  <div class="stat-grid cols-4">
-    <div class="kpi-card" style="--card-color:var(--accent4)"><div class="kpi-label">Total Entries</div><div class="kpi-value" id="chbTotal">—</div><div class="kpi-sub">all line items</div></div>
-    <div class="kpi-card" style="--card-color:var(--new)"><div class="kpi-label">Released</div><div class="kpi-value" id="chbReleased">—</div><div class="kpi-sub">cargo released</div></div>
-    <div class="kpi-card" style="--card-color:var(--error)"><div class="kpi-label">Pending Release</div><div class="kpi-value" id="chbPending">—</div><div class="kpi-sub">awaiting release</div></div>
-    <div class="kpi-card" style="--card-color:var(--accent2)"><div class="kpi-label">Avg Duty Rate</div><div class="kpi-value sm" id="chbAvgDuty">—</div><div class="kpi-sub">value duty rate %</div></div>
+  <div class="stat-grid cols-4" data-section="chb">
+    <div class="kpi-card" style="--card-color:var(--accent4)" data-panel="chb_total"><div class="kpi-label">Total Entries</div><div class="kpi-value" id="chbTotal">—</div><div class="kpi-sub">all line items</div></div>
+    <div class="kpi-card" style="--card-color:var(--new)" data-panel="chb_released"><div class="kpi-label">Released</div><div class="kpi-value" id="chbReleased">—</div><div class="kpi-sub">cargo released</div></div>
+    <div class="kpi-card" style="--card-color:var(--error)" data-panel="chb_pending"><div class="kpi-label">Pending Release</div><div class="kpi-value" id="chbPending">—</div><div class="kpi-sub">awaiting release</div></div>
+    <div class="kpi-card" style="--card-color:var(--accent2)" data-panel="chb_avgduty"><div class="kpi-label">Avg Duty Rate</div><div class="kpi-value sm" id="chbAvgDuty">—</div><div class="kpi-sub">value duty rate %</div></div>
   </div>
 
-  <div class="stat-grid cols-3" style="margin-top:12px">
-    <div class="wide-card">
+  <div class="stat-grid cols-3" style="margin-top:12px" data-section="chb">
+    <div class="wide-card" data-panel="chb_duty">
       <h4>Total CHB Duty</h4>
       <div style="font-size:28px;font-weight:800;color:var(--accent4);margin:8px 0" id="chbDutyBig">—</div>
       <div style="font-size:11px;color:var(--muted)">Liquidated: <span id="chbLiqDuty" style="color:var(--text)">—</span></div>
     </div>
-    <div class="wide-card">
+    <div class="wide-card" data-panel="chb_countries">
       <h4>Top Countries of Origin</h4>
       <ul class="bar-list" id="chbCountryBars" style="--bar-color:var(--accent4)"></ul>
     </div>
-    <div class="wide-card">
+    <div class="wide-card" data-panel="chb_release_donut">
       <h4>Release Status</h4>
       <div class="release-wrap" id="releaseWrap">
         <svg class="donut-svg" width="90" height="90" viewBox="0 0 90 90">
@@ -234,18 +255,45 @@
     </div>
   </div>
 
-  <!-- ═══════════════ ACTIVITY LOG ═══════════════ -->
-  <div class="section-header" style="margin-top:32px">
-    <h2>📜 Activity Log</h2>
-    <div class="line"></div>
-  </div>
-  <div class="log-wrap">
-    <table>
-      <thead><tr><th>Timestamp</th><th>Event</th><th>Folder</th><th>File</th><th>Link</th></tr></thead>
-      <tbody id="logBody">
-        <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:28px;font-family:'Space Mono',monospace;font-size:11px">Connect to see activity</td></tr>
-      </tbody>
-    </table>
+  <!-- ═══════════════ CUSTOMIZE DRAWER ═══════════════ -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <span>Customize Dashboard</span>
+      <button class="drawer-close" onclick="toggleDrawer()">✕</button>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-section">
+        <div class="drawer-section-title">🚢 Shipments</div>
+        <label class="toggle-row"><span>Total Shipments</span><input type="checkbox" data-panel="smh26_total" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>This Month</span><input type="checkbox" data-panel="smh26_month" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Unique Importers</span><input type="checkbox" data-panel="smh26_importers" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Total Duty Billed</span><input type="checkbox" data-panel="smh26_duty" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Total MPF</span><input type="checkbox" data-panel="smh26_mpf" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Top Discharge Ports</span><input type="checkbox" data-panel="smh26_ports" onchange="togglePanel(this)"></label>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-section-title">📦 Containers</div>
+        <label class="toggle-row"><span>Total Containers</span><input type="checkbox" data-panel="ctn_total" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Total Volume (CBM)</span><input type="checkbox" data-panel="ctn_cbm" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Total Weight</span><input type="checkbox" data-panel="ctn_weight" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Total Pieces</span><input type="checkbox" data-panel="ctn_pieces" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Container Types</span><input type="checkbox" data-panel="ctn_types" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Status Breakdown</span><input type="checkbox" data-panel="ctn_statuses" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Top Cargo Contents</span><input type="checkbox" data-panel="ctn_contents" onchange="togglePanel(this)"></label>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-section-title">📋 CHB Entries</div>
+        <label class="toggle-row"><span>Total Entries</span><input type="checkbox" data-panel="chb_total" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Released Count</span><input type="checkbox" data-panel="chb_released" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Pending Release</span><input type="checkbox" data-panel="chb_pending" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Avg Duty Rate</span><input type="checkbox" data-panel="chb_avgduty" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Total CHB Duty</span><input type="checkbox" data-panel="chb_duty" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Top Countries</span><input type="checkbox" data-panel="chb_countries" onchange="togglePanel(this)"></label>
+        <label class="toggle-row"><span>Release Status Donut</span><input type="checkbox" data-panel="chb_release_donut" onchange="togglePanel(this)"></label>
+      </div>
+      <button class="drawer-reset" onclick="resetPanels()">Reset to Default</button>
+    </div>
   </div>
 
   <footer>Logistics Monitor · SMH26 · Container · CHB · Auto-refreshes every 60s</footer>
@@ -296,7 +344,6 @@ function renderAll(data) {
   set("smh26Duty",      money(k.smh26_total_duty_billed));
   set("smh26MPF",       money(k.smh26_total_mpf));
   set("smh26Tag",       (k.smh26_total_shipments || "—") + " total records");
-  renderBars("smh26ImporterBars", k.smh26_top_importers);
   renderBars("smh26PortBars",     k.smh26_top_ports);
 
   // ── Container
@@ -330,9 +377,6 @@ function renderAll(data) {
 
   renderBars("chbCountryBars", k.chb_top_countries);
   renderDonut(released, pending, total);
-
-  // ── Log
-  renderLog(data.log || []);
 }
 
 // ── Donut chart
@@ -376,25 +420,6 @@ function renderChips(id, items) {
   }).join("");
 }
 
-// ── Log table
-function renderLog(log) {
-  var tbody = document.getElementById("logBody");
-  if (!log.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;font-family:Space Mono,monospace;font-size:11px">No activity yet</td></tr>';
-    return;
-  }
-  tbody.innerHTML = log.slice(0,40).map(function(row) {
-    var ev    = row["Event"] || "";
-    var color = ev.includes("NEW") ? "var(--new)" : ev.includes("UPDATED") ? "var(--updated)" : ev.includes("ERROR") ? "var(--error)" : "var(--muted)";
-    return '<tr>' +
-      '<td class="mono">' + (row["Timestamp"]||"—") + '</td>' +
-      '<td><span style="color:' + color + ';font-family:Space Mono,monospace;font-size:10px">' + ev + '</span></td>' +
-      '<td class="mono">' + (row["Folder"]||"—") + '</td>' +
-      '<td>' + (row["Details"]||"—") + '</td>' +
-      '<td>' + (row["URL"] ? '<a href="' + row["URL"] + '" target="_blank">↗</a>' : "—") + '</td></tr>';
-  }).join("");
-}
-
 // ── Helpers
 function parseTopN(str) {
   if (!str) return [];
@@ -413,6 +438,61 @@ function setStatus(state, text) {
   pill.className = "status-pill " + (state === "active" ? "" : state);
   document.getElementById("statusText").textContent = text;
 }
+// ── Drawer & panel toggles
+var STORAGE_KEY = "logisticsPanelPrefs";
+
+var ALL_PANELS = [
+  "smh26_total","smh26_month","smh26_importers","smh26_duty","smh26_mpf","smh26_ports",
+  "ctn_total","ctn_cbm","ctn_weight","ctn_pieces","ctn_types","ctn_statuses","ctn_contents",
+  "chb_total","chb_released","chb_pending","chb_avgduty","chb_duty","chb_countries","chb_release_donut"
+];
+
+function toggleDrawer() {
+  document.getElementById("drawer").classList.toggle("open");
+  document.getElementById("drawerOverlay").classList.toggle("open");
+}
+
+function loadPanelPrefs() {
+  var saved = localStorage.getItem(STORAGE_KEY);
+  var prefs  = saved ? JSON.parse(saved) : null;
+  // Default: all on
+  if (!prefs) {
+    prefs = {};
+    ALL_PANELS.forEach(function(p){ prefs[p] = true; });
+  }
+  ALL_PANELS.forEach(function(panel) {
+    var isOn = prefs[panel] !== false;
+    applyPanel(panel, isOn);
+    var cb = document.querySelector('input[data-panel="' + panel + '"]');
+    if (cb) cb.checked = isOn;
+  });
+}
+
+function togglePanel(checkbox) {
+  var panel = checkbox.getAttribute("data-panel");
+  var isOn  = checkbox.checked;
+  applyPanel(panel, isOn);
+  // Save prefs
+  var saved = localStorage.getItem(STORAGE_KEY);
+  var prefs  = saved ? JSON.parse(saved) : {};
+  prefs[panel] = isOn;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+}
+
+function applyPanel(panel, isOn) {
+  var els = document.querySelectorAll('[data-panel="' + panel + '"]');
+  els.forEach(function(el) {
+    el.classList.toggle("hidden", !isOn);
+  });
+}
+
+function resetPanels() {
+  localStorage.removeItem(STORAGE_KEY);
+  loadPanelPrefs();
+}
+
+// Initialize panel prefs on load
+loadPanelPrefs();
 </script>
 </body>
 </html>
