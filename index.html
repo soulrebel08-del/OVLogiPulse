@@ -8,1040 +8,863 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <style>
-:root {
-  --bg:        #f0f4f8;
-  --bg2:       #e8eef4;
-  --surface:   #ffffff;
-  --surface2:  #f7fafc;
-  --border:    #dde3ea;
-  --border2:   #c8d3dd;
-  --navy:      #0f2342;
-  --navy2:     #1a3a5c;
-  --ocean:     #1565c0;
-  --ocean2:    #1976d2;
-  --teal:      #00796b;
-  --amber:     #e65100;
-  --green:     #2e7d32;
-  --red:       #c62828;
-  --text:      #1a2332;
-  --text2:     #3d5166;
-  --muted:     #6b7f96;
-  --accent:    #1565c0;
-  --shadow:    0 1px 3px rgba(15,35,66,0.08), 0 4px 12px rgba(15,35,66,0.05);
-  --shadow-md: 0 4px 16px rgba(15,35,66,0.12), 0 1px 4px rgba(15,35,66,0.08);
+:root{
+  --bg:#f0f4f8;--bg2:#e8eef4;--surface:#fff;--surface2:#f7fafc;
+  --border:#dde3ea;--border2:#c8d3dd;
+  --navy:#0f2342;--navy2:#1a3a5c;--ocean:#1565c0;
+  --teal:#00796b;--amber:#e65100;--green:#2e7d32;--red:#c62828;
+  --text:#1a2332;--text2:#3d5166;--muted:#6b7f96;
+  --shadow:0 1px 3px rgba(15,35,66,.08),0 4px 12px rgba(15,35,66,.05);
+  --shadow-md:0 4px 16px rgba(15,35,66,.12),0 1px 4px rgba(15,35,66,.08);
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  min-height: 100vh;
-}
+.topbar{background:var(--navy);color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.topbar-brand{display:flex;align-items:center;gap:11px}
+.topbar-logo{width:30px;height:30px;background:var(--ocean);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.topbar-brand h1{font-family:'DM Serif Display',serif;font-size:19px;color:#fff}
+.topbar-brand h1 span{color:#64b5f6}
+.topbar-sub{font-size:10px;color:rgba(255,255,255,.4);font-family:'IBM Plex Mono',monospace;letter-spacing:1px;margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.status-pill{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);padding:5px 12px;border-radius:100px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.65)}
+.status-pill .dot{width:7px;height:7px;border-radius:50%;background:#4caf50;animation:pulse 2s ease-in-out infinite}
+.status-pill.error .dot{background:#ef5350;animation:none}
+.status-pill.idle .dot{background:rgba(255,255,255,.3);animation:none}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(76,175,80,.5)}50%{opacity:.7;box-shadow:0 0 0 5px rgba(76,175,80,0)}}
+#lastChecked{font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,.4)}
+.btn-tb{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:6px 13px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-tb:hover{background:rgba(255,255,255,.18)}
+.btn-tb.spinning svg{animation:spin 1s linear infinite}
+.btn-cust{background:rgba(21,101,192,.5);border-color:rgba(100,181,246,.4)}
+.btn-cust:hover{background:rgba(21,101,192,.7)}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* TOPBAR */
-.topbar {
-  background: var(--navy);
-  color: #fff;
-  padding: 0 32px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 56px;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-.topbar-brand { display: flex; align-items: center; gap: 12px; }
-.topbar-logo {
-  width: 32px; height: 32px;
-  background: var(--ocean);
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
-}
-.topbar-brand h1 { font-family: 'DM Serif Display', serif; font-size: 20px; color: #fff; letter-spacing: -0.3px; }
-.topbar-brand h1 span { color: #64b5f6; }
-.topbar-sub { font-size: 11px; color: rgba(255,255,255,0.45); font-family: 'IBM Plex Mono', monospace; letter-spacing: 1px; margin-top: 1px; }
-.topbar-right { display: flex; align-items: center; gap: 12px; }
-.status-pill {
-  display: flex; align-items: center; gap: 7px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
-  padding: 5px 12px; border-radius: 100px;
-  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.7);
-}
-.status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: #4caf50; animation: pulse 2s ease-in-out infinite; }
-.status-pill.error .dot { background: #ef5350; animation: none; }
-.status-pill.idle  .dot { background: rgba(255,255,255,0.3); animation: none; }
-@keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(76,175,80,0.5);}50%{opacity:.7;box-shadow:0 0 0 5px rgba(76,175,80,0);} }
-#lastChecked { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.4); }
-.btn-topbar {
-  display: flex; align-items: center; gap: 6px;
-  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-  color: #fff; padding: 6px 14px; border-radius: 6px;
-  font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600;
-  cursor: pointer; transition: background .2s;
-}
-.btn-topbar:hover { background: rgba(255,255,255,0.18); }
-.btn-topbar.spinning svg { animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.btn-customize { background: rgba(21,101,192,0.5); border-color: rgba(100,181,246,0.4); }
-.btn-customize:hover { background: rgba(21,101,192,0.7); }
+.shell{display:flex;min-height:calc(100vh - 54px)}
+.sidebar{width:210px;flex-shrink:0;background:var(--navy2);padding:20px 0;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto}
+.sb-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:2px;padding:0 20px;margin-bottom:5px;margin-top:16px}
+.sb-label:first-child{margin-top:0}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 16px;border-radius:7px;margin:1px 8px;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;transition:all .15s;text-decoration:none}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:var(--ocean);color:#fff}
+.nav-icon{font-size:14px;width:18px;text-align:center}
+.nav-badge{margin-left:auto;background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:100px;font-family:'IBM Plex Mono',monospace}
 
-/* MAIN LAYOUT */
-.shell { display: flex; min-height: calc(100vh - 56px); }
+.main{flex:1;padding:24px 24px 40px;min-width:0}
 
-/* SIDEBAR NAV */
-.sidebar {
-  width: 220px; flex-shrink: 0;
-  background: var(--navy2);
-  padding: 24px 0;
-  position: sticky; top: 56px; height: calc(100vh - 56px);
-  overflow-y: auto;
-}
-.sidebar-section { padding: 0 16px; margin-bottom: 24px; }
-.sidebar-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 2px; padding: 0 4px; margin-bottom: 6px; }
-.nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 12px; border-radius: 8px;
-  font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.65);
-  cursor: pointer; transition: all .15s; margin-bottom: 2px;
-  text-decoration: none;
-}
-.nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
-.nav-item.active { background: var(--ocean); color: #fff; }
-.nav-item .nav-icon { font-size: 15px; width: 20px; text-align: center; }
-.nav-badge {
-  margin-left: auto; background: var(--amber); color: #fff;
-  font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 100px;
-  font-family: 'IBM Plex Mono', monospace;
-}
-.nav-badge.green { background: var(--green); }
+.sec-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:2.5px;display:flex;align-items:center;gap:10px;margin-bottom:12px;margin-top:28px}
+.sec-title:first-child{margin-top:0}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:2px 8px;border-radius:4px}
 
-/* MAIN CONTENT */
-.main { flex: 1; padding: 28px 28px 40px; min-width: 0; }
+/* DATE FILTER */
+.date-filter{background:var(--navy);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.dfl{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px}
+.date-filter input[type=date]{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:7px 12px;border-radius:7px;font-family:'IBM Plex Mono',monospace;font-size:11px;outline:none;min-width:150px}
+.date-filter input[type=date]:focus{border-color:#64b5f6}
+.date-filter input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.6}
+.df-info{font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,.5);align-self:center}
+.btn-f{padding:7px 16px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.btn-f.apply{background:#1976d2;color:#fff}
+.btn-f.apply:hover{background:var(--ocean)}
+.btn-f.rst{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7)}
+.btn-f.rst:hover{background:rgba(255,255,255,.18)}
 
-/* SECTION TITLE */
-.section-title {
-  font-size: 13px; font-weight: 700; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 2.5px;
-  display: flex; align-items: center; gap: 10px;
-  margin-bottom: 14px; margin-top: 32px;
-}
-.section-title:first-child { margin-top: 0; }
-.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-.section-tag {
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-  background: var(--surface); border: 1px solid var(--border);
-  color: var(--muted); padding: 2px 8px; border-radius: 4px;
-}
+/* KPI */
+.kpi-grid{display:grid;gap:12px}
+.kpi-grid.c5{grid-template-columns:repeat(5,1fr)}
+.kpi-grid.c4{grid-template-columns:repeat(4,1fr)}
+.kpi-grid.c3{grid-template-columns:repeat(3,1fr)}
+.kpi-grid.c2{grid-template-columns:repeat(2,1fr)}
+.kpi-grid.c1{grid-template-columns:1fr}
 
-/* KPI CARDS */
-.kpi-grid { display: grid; gap: 14px; }
-.kpi-grid.cols-5 { grid-template-columns: repeat(5,1fr); }
-.kpi-grid.cols-4 { grid-template-columns: repeat(4,1fr); }
-.kpi-grid.cols-3 { grid-template-columns: repeat(3,1fr); }
-.kpi-grid.cols-2 { grid-template-columns: repeat(2,1fr); }
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:box-shadow .2s,transform .15s}
+.kpi-card.drill{cursor:pointer}
+.kpi-card.drill:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.kpi-card.drill:hover .kpi-hint{opacity:1}
+.kpi-hint{position:absolute;bottom:8px;right:10px;font-size:9px;color:var(--ocean);font-family:'IBM Plex Mono',monospace;opacity:0;transition:opacity .2s}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--card-color,var(--ocean));border-radius:11px 11px 0 0}
+.kpi-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.kpi-value{font-size:30px;font-weight:700;color:var(--card-color,var(--navy));line-height:1}
+.kpi-value.sm{font-size:20px;padding-top:4px}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:4px}
 
-.kpi-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; padding: 18px 20px;
-  box-shadow: var(--shadow); position: relative; overflow: hidden;
-  transition: box-shadow .2s, transform .15s;
-}
-.kpi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-.kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: var(--card-color, var(--ocean)); border-radius: 12px 12px 0 0; }
-.kpi-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
-.kpi-value { font-size: 32px; font-weight: 700; color: var(--card-color, var(--navy)); line-height: 1; }
-.kpi-value.sm { font-size: 20px; padding-top: 4px; }
-.kpi-sub { font-size: 11px; color: var(--muted); margin-top: 5px; }
+.card{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:16px 18px;box-shadow:var(--shadow)}
+.card h4{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px}
+.bar-list{list-style:none}
+.bar-list li{display:flex;align-items:center;gap:9px;margin-bottom:8px;font-size:12px}
+.bar-list li:last-child{margin-bottom:0}
+.bar-label{min-width:130px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
+.bar-track{flex:1;background:var(--bg2);border-radius:3px;height:6px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;background:var(--bar-color,var(--ocean))}
+.bar-count{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);min-width:28px;text-align:right}
 
-/* WIDE CARDS */
-.card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow);
-}
-.card h4 { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
+.chip-list{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:3px 9px;border-radius:100px;font-family:'IBM Plex Mono',monospace;font-size:10px;border:1px solid;font-weight:600}
+.chip.blue{background:#e3f2fd;color:#1565c0;border-color:#90caf9}
+.chip.green{background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7}
+.chip.orange{background:#fff3e0;color:#e65100;border-color:#ffcc80}
+.chip.teal{background:#e0f2f1;color:#00796b;border-color:#80cbc4}
+.chip.red{background:#ffebee;color:#c62828;border-color:#ef9a9a}
 
-/* BAR LIST */
-.bar-list { list-style: none; }
-.bar-list li { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; font-size: 12px; }
-.bar-list li:last-child { margin-bottom: 0; }
-.bar-label { min-width: 140px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
-.bar-track { flex: 1; background: var(--bg2); border-radius: 3px; height: 6px; overflow: hidden; }
-.bar-fill  { height: 100%; border-radius: 3px; background: var(--bar-color, var(--ocean)); }
-.bar-count { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); min-width: 30px; text-align: right; }
+.release-wrap{display:flex;align-items:center;gap:18px}
+.leg-item{display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:12px;color:var(--text2)}
+.leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 
-/* CHIPS */
-.chip-list { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { padding: 4px 10px; border-radius: 100px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; border: 1px solid; font-weight: 600; }
-.chip.blue   { background: #e3f2fd; color: #1565c0; border-color: #90caf9; }
-.chip.green  { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
-.chip.orange { background: #fff3e0; color: #e65100; border-color: #ffcc80; }
-.chip.teal   { background: #e0f2f1; color: #00796b; border-color: #80cbc4; }
-.chip.red    { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
+/* MAP */
+.map-card{background:var(--surface);border:1px solid var(--border);border-radius:11px;box-shadow:var(--shadow);overflow:hidden}
+.map-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);flex-wrap:wrap;gap:10px}
+.map-hdr h3{font-family:'DM Serif Display',serif;font-size:15px;color:#fff}
+.map-hdr p{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px}
+.map-legend{display:flex;gap:14px;align-items:center}
+.ml-item{display:flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,.65)}
+.ml-dot{width:10px;height:10px;border-radius:50%}
+.map-controls{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--surface2);align-items:center}
+.zoom-btn{background:var(--surface);border:1px solid var(--border2);color:var(--text2);width:28px;height:28px;border-radius:6px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;transition:background .15s}
+.zoom-btn:hover{background:var(--bg2)}
+.zoom-info{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-left:4px}
+#mapContainer{position:relative;background:#cfe8f5;height:420px;overflow:hidden;cursor:grab}
+#mapContainer:active{cursor:grabbing}
+#mapSvg{width:100%;height:100%}
+.map-tip{position:absolute;background:var(--navy);color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;pointer-events:none;opacity:0;transition:opacity .15s;max-width:220px;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.map-tip strong{display:block;margin-bottom:2px;color:#64b5f6;font-size:12px}
+.map-tip small{color:rgba(255,255,255,.6);font-size:11px}
 
-/* DONUT */
-.release-wrap { display: flex; align-items: center; gap: 20px; }
-.donut-svg { flex-shrink: 0; }
-.leg-item { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px; color: var(--text2); }
-.leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+/* CALENDAR */
+.cal-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.cal-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
+.cal-input{background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:7px 12px;border-radius:7px;font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;transition:border-color .2s;box-shadow:var(--shadow)}
+.cal-input:focus{border-color:var(--ocean)}
+.cal-nav button{background:var(--surface);border:1px solid var(--border2);color:var(--text2);padding:6px 11px;border-radius:6px;cursor:pointer;font-size:12px;margin-right:4px;transition:background .15s}
+.cal-nav button:hover{background:var(--bg2)}
+.rel-badge{display:inline-flex;align-items:center;gap:6px;background:#e8f5e9;border:1px solid #a5d6a7;color:var(--green);padding:3px 11px;border-radius:100px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600}
 
-/* ═══════════ MAP SECTION ═══════════ */
-.map-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; box-shadow: var(--shadow); overflow: hidden;
-}
-.map-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 20px; border-bottom: 1px solid var(--border);
-  background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
-}
-.map-header h3 { font-family: 'DM Serif Display', serif; font-size: 16px; color: #fff; }
-.map-header p  { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
-.map-legend { display: flex; gap: 16px; align-items: center; }
-.map-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: rgba(255,255,255,0.7); }
-.map-legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-#mapContainer { position: relative; background: #d4e8f5; height: 420px; }
-#mapSvg { width: 100%; height: 100%; }
-.map-tooltip {
-  position: absolute; background: var(--navy); color: #fff;
-  padding: 8px 12px; border-radius: 8px; font-size: 12px;
-  pointer-events: none; opacity: 0; transition: opacity .15s;
-  max-width: 200px; z-index: 10;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-.map-tooltip strong { display: block; margin-bottom: 3px; color: #64b5f6; }
+.search-bar{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.search-bar input{flex:1;background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:9px 15px;border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;transition:border-color .2s;box-shadow:var(--shadow)}
+.search-bar input:focus{border-color:var(--ocean)}
+.search-bar button{padding:9px 20px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s}
+.search-bar button:hover{background:var(--ocean)}
 
-/* FILTER BAR */
-.filter-bar {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;
-  display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
-  box-shadow: var(--shadow);
-}
-.filter-group { display: flex; flex-direction: column; gap: 5px; }
-.filter-group label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
-.filter-group input, .filter-group select {
-  background: var(--surface2); border: 1px solid var(--border2);
-  color: var(--text); padding: 7px 12px; border-radius: 7px;
-  font-family: 'IBM Plex Mono', monospace; font-size: 11px; outline: none;
-  transition: border-color .2s; min-width: 160px;
-}
-.filter-group input:focus, .filter-group select:focus { border-color: var(--ocean); }
-.filter-btn { padding: 8px 18px; border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all .2s; }
-.filter-btn.apply { background: var(--navy); color: #fff; }
-.filter-btn.apply:hover { background: var(--ocean); }
-.filter-btn.clear { background: transparent; border: 1px solid var(--border2); color: var(--muted); }
-.filter-btn.clear:hover { border-color: var(--ocean); color: var(--ocean); }
-.filter-results-count { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); align-self: center; margin-left: auto; }
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:11px;overflow:auto;max-height:380px;box-shadow:var(--shadow)}
+.stbl{width:100%;border-collapse:collapse;font-size:11px;min-width:860px}
+.stbl thead th{background:var(--navy);color:rgba(255,255,255,.8);padding:9px 12px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:1}
+.stbl tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.stbl tbody tr:hover{background:#e3f2fd}
+.stbl tbody tr:last-child{border-bottom:none}
+.stbl tbody td{padding:8px 12px;color:var(--text);vertical-align:middle;white-space:nowrap}
+.stbl .mn{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.stbl .rel{color:var(--green);font-weight:700}
+.stbl .isfy{color:var(--green);font-weight:600}
+.stbl .isfn{color:var(--muted)}
+.stbl .nd{text-align:center;color:var(--muted);padding:28px;font-family:'IBM Plex Mono',monospace;font-size:11px}
+.rl{color:var(--ocean);font-weight:600;cursor:pointer}
+.rl:hover{text-decoration:underline}
 
-/* SEARCH BAR */
-.search-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
-.search-bar input {
-  flex: 1; background: var(--surface); border: 1px solid var(--border2);
-  color: var(--text); padding: 10px 16px; border-radius: 8px;
-  font-family: 'IBM Plex Mono', monospace; font-size: 12px; outline: none;
-  transition: border-color .2s; box-shadow: var(--shadow);
-}
-.search-bar input:focus { border-color: var(--ocean); }
-.search-bar button { padding: 10px 22px; background: var(--navy); color: #fff; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .2s; }
-.search-bar button:hover { background: var(--ocean); }
-
-/* TODAY BADGE */
-.today-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: #e8f5e9; border: 1px solid #a5d6a7;
-  color: var(--green); padding: 4px 12px; border-radius: 100px;
-  font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;
-}
-
-/* SHIP TABLE */
-.ship-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: auto; max-height: 400px; box-shadow: var(--shadow); }
-.ship-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px; }
-.ship-table thead th {
-  background: var(--navy); color: rgba(255,255,255,0.8);
-  padding: 10px 14px; text-align: left;
-  font-family: 'IBM Plex Mono', monospace; font-size: 9px;
-  text-transform: uppercase; letter-spacing: 1px;
-  border-bottom: 1px solid var(--border); white-space: nowrap;
-  position: sticky; top: 0; z-index: 1;
-}
-.ship-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
-.ship-table tbody tr:hover { background: #e3f2fd; }
-.ship-table tbody tr:last-child { border-bottom: none; }
-.ship-table tbody td { padding: 9px 14px; color: var(--text); vertical-align: middle; white-space: nowrap; }
-.ship-table .mono { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); }
-.ship-table .release-today { color: var(--green); font-weight: 700; }
-.ship-table .isf-match   { color: var(--green); font-weight: 600; }
-.ship-table .isf-nomatch { color: var(--amber); font-weight: 600; }
-.ship-table .no-data { text-align: center; color: var(--muted); padding: 32px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
-.ref-link { color: var(--ocean); font-weight: 600; text-decoration: none; cursor: pointer; }
-.ref-link:hover { text-decoration: underline; }
-
-/* MODAL */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,35,66,0.6); z-index: 200; backdrop-filter: blur(3px); align-items: center; justify-content: center; }
-.modal-overlay.open { display: flex; }
-.modal {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 16px; width: 90%; max-width: 880px;
-  max-height: 88vh; overflow-y: auto; padding: 32px 36px;
-  position: relative; box-shadow: var(--shadow-md);
-}
-.modal-close { position: absolute; top: 20px; right: 24px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); font-size: 16px; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-.modal-close:hover { background: var(--border); }
-.modal-hero { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-.modal-hero-icon { width: 48px; height: 48px; background: var(--navy); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
-.modal h3 { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--navy); }
-.modal-sub { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 4px; }
-.modal-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
-.mf { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
-.mf-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-.mf-value { font-size: 13px; color: var(--text); font-weight: 600; word-break: break-word; }
-.mf-value.hi   { color: var(--ocean); }
-.mf-value.good { color: var(--green); }
-.mf-value.warn { color: var(--amber); }
-.modal-section-title { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin: 20px 0 10px; padding-bottom: 7px; border-bottom: 1px solid var(--border); }
+/* MODALS */
+.moverlay{display:none;position:fixed;inset:0;background:rgba(15,35,66,.6);z-index:200;backdrop-filter:blur(3px);align-items:center;justify-content:center}
+.moverlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:90%;max-width:880px;max-height:88vh;overflow-y:auto;padding:28px 32px;position:relative;box-shadow:var(--shadow-md)}
+.mc{position:absolute;top:16px;right:20px;background:var(--bg);border:1px solid var(--border);color:var(--muted);font-size:15px;cursor:pointer;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.mc:hover{background:var(--border)}
+.modal-hero{display:flex;align-items:flex-start;gap:14px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+.micon{width:44px;height:44px;background:var(--navy);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.modal h3{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy)}
+.msub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px}
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.mf{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:11px 13px}
+.mfl{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.mfv{font-size:13px;color:var(--text);font-weight:600;word-break:break-word}
+.mfv.hi{color:var(--ocean)}
+.mfv.good{color:var(--green)}
+.mfv.warn{color:var(--amber)}
+.msec{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin:18px 0 9px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.drill-info{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:10px}
 
 /* DRAWER */
-.drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(15,35,66,0.4); z-index: 100; }
-.drawer-overlay.open { display: block; }
-.drawer { position: fixed; top: 0; right: -390px; width: 370px; height: 100vh; background: var(--surface); border-left: 1px solid var(--border); z-index: 101; transition: right .3s cubic-bezier(.4,0,.2,1); overflow-y: auto; box-shadow: -4px 0 20px rgba(0,0,0,0.1); }
-.drawer.open { right: 0; }
-.drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 14px; color: var(--navy); position: sticky; top: 0; background: var(--surface); z-index: 1; }
-.drawer-close { background: var(--bg); border: 1px solid var(--border); color: var(--muted); font-size: 14px; cursor: pointer; padding: 5px 9px; border-radius: 6px; }
-.drawer-body { padding: 20px 24px; }
-.drawer-section { margin-bottom: 24px; }
-.drawer-section-title { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--bg2); cursor: pointer; font-size: 13px; color: var(--text2); }
-.toggle-row:last-of-type { border-bottom: none; }
-.toggle-row input[type="checkbox"] { appearance: none; width: 36px; height: 20px; background: var(--border); border-radius: 100px; position: relative; cursor: pointer; transition: background .2s; flex-shrink: 0; }
-.toggle-row input[type="checkbox"]:checked { background: var(--ocean); }
-.toggle-row input[type="checkbox"]::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:left .2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-.toggle-row input[type="checkbox"]:checked::after { left:18px; }
-.drawer-reset { width: 100%; padding: 10px; background: transparent; border: 1px solid var(--border2); color: var(--muted); border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; margin-top: 8px; }
-.drawer-reset:hover { border-color: var(--ocean); color: var(--ocean); }
-[data-panel].hidden { display: none !important; }
+.doverlay{display:none;position:fixed;inset:0;background:rgba(15,35,66,.35);z-index:100}
+.doverlay.open{display:block}
+.drawer{position:fixed;top:0;right:-390px;width:370px;height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:101;transition:right .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;box-shadow:-4px 0 20px rgba(0,0,0,.1)}
+.drawer.open{right:0}
+.dhdr{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);font-weight:700;font-size:14px;color:var(--navy);position:sticky;top:0;background:var(--surface)}
+.dclose{background:var(--bg);border:1px solid var(--border);color:var(--muted);font-size:13px;cursor:pointer;padding:5px 9px;border-radius:6px}
+.dbody{padding:18px 22px}
+.dsec{margin-bottom:22px}
+.dsec-title{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+.trow{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg2);cursor:pointer;font-size:13px;color:var(--text2)}
+.trow:last-of-type{border-bottom:none}
+.trow input[type=checkbox]{appearance:none;width:36px;height:20px;background:var(--border);border-radius:100px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.trow input[type=checkbox]:checked{background:var(--ocean)}
+.trow input[type=checkbox]::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.trow input[type=checkbox]:checked::after{left:18px}
+.dreset{width:100%;padding:9px;background:transparent;border:1px solid var(--border2);color:var(--muted);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;margin-top:6px}
+.dreset:hover{border-color:var(--ocean);color:var(--ocean)}
+[data-panel].hidden{display:none!important}
 
-footer { text-align: center; padding: 20px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 8px; }
+footer{text-align:center;padding:18px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);border-top:1px solid var(--border);margin-top:8px}
 
-@media (max-width: 900px) {
-  .kpi-grid.cols-5, .kpi-grid.cols-4 { grid-template-columns: repeat(2,1fr); }
-  .kpi-grid.cols-3 { grid-template-columns: repeat(2,1fr); }
-  .sidebar { display: none; }
-  .main { padding: 16px; }
+@media(max-width:900px){
+  .kpi-grid.c5,.kpi-grid.c4{grid-template-columns:repeat(2,1fr)}
+  .kpi-grid.c3{grid-template-columns:repeat(2,1fr)}
+  .sidebar{display:none}
+  .main{padding:14px}
 }
 </style>
 </head>
 <body>
 
-<!-- TOPBAR -->
 <div class="topbar">
   <div class="topbar-brand">
-    <div class="topbar-logo">🚢</div>
-    <div>
-      <h1>OV<span>LogiPulse</span></h1>
-      <div class="topbar-sub">SUPPLY CHAIN MONITOR · HOURLY SYNC</div>
-    </div>
+    <div class="topbar-logo">&#x1F6A2;</div>
+    <div><h1>OV<span>LogiPulse</span></h1><div class="topbar-sub">SUPPLY CHAIN MONITOR &middot; HOURLY SYNC</div></div>
   </div>
   <div class="topbar-right">
-    <div class="status-pill idle" id="statusPill"><div class="dot"></div><span id="statusText">Connecting…</span></div>
+    <div class="status-pill idle" id="statusPill"><div class="dot"></div><span id="statusText">Connecting&hellip;</span></div>
     <span id="lastChecked"></span>
-    <button class="btn-topbar" id="refreshBtn" onclick="loadData()">
+    <button class="btn-tb" id="refreshBtn" onclick="loadData()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
       Refresh
     </button>
-    <button class="btn-topbar btn-customize" onclick="toggleDrawer()">⚙ Customize</button>
+    <button class="btn-tb btn-cust" onclick="toggleDrawer()">&#x2699; Customize</button>
   </div>
 </div>
 
 <div class="shell">
-
-<!-- SIDEBAR -->
 <nav class="sidebar">
-  <div class="sidebar-section">
-    <div class="sidebar-label">Navigation</div>
-    <a class="nav-item active" href="#map-section"><span class="nav-icon">🗺️</span> Global Map</a>
-    <a class="nav-item" href="#releases-section"><span class="nav-icon">📬</span> Today's Releases <span class="nav-badge green" id="sidebarReleaseCount">—</span></a>
-    <a class="nav-item" href="#search-section"><span class="nav-icon">🔍</span> B/L Search</a>
-    <a class="nav-item" href="#filter-section"><span class="nav-icon">⚙</span> Filter Shipments</a>
-  </div>
-  <div class="sidebar-section">
-    <div class="sidebar-label">KPI Panels</div>
-    <a class="nav-item" href="#smh26-section"><span class="nav-icon">🚢</span> Shipments</a>
-    <a class="nav-item" href="#ctn-section"><span class="nav-icon">📦</span> Containers</a>
-    <a class="nav-item" href="#chb-section"><span class="nav-icon">📋</span> CHB Entries</a>
-  </div>
+  <div class="sb-label">Views</div>
+  <a class="nav-item active" href="#map-sec"><span class="nav-icon">&#x1F5FA;</span> Global Map</a>
+  <a class="nav-item" href="#rel-sec"><span class="nav-icon">&#x1F4EC;</span> Cargo Releases <span class="nav-badge" id="sbRelCount">0</span></a>
+  <a class="nav-item" href="#bl-sec"><span class="nav-icon">&#x1F50D;</span> B/L Search</a>
+  <div class="sb-label">KPI Panels</div>
+  <a class="nav-item" href="#smh-sec"><span class="nav-icon">&#x1F6A2;</span> Shipments</a>
+  <a class="nav-item" href="#ctn-sec"><span class="nav-icon">&#x1F4E6;</span> Containers</a>
+  <a class="nav-item" href="#chb-sec"><span class="nav-icon">&#x1F4CB;</span> CHB Entries</a>
 </nav>
 
-<!-- MAIN -->
 <main class="main">
 
-  <!-- ══════════ GLOBAL MAP ══════════ -->
-  <div class="section-title" id="map-section">🗺️ Global Shipment Flow</div>
-  <div class="map-card" style="margin-bottom:28px">
-    <div class="map-header">
-      <div>
-        <h3>Origin Countries → US Ports of Discharge</h3>
-        <p>Bubble size = shipment volume · Click a port for details</p>
-      </div>
-      <div class="map-legend">
-        <div class="map-legend-item"><div class="map-legend-dot" style="background:#ff7043"></div> Origin Country</div>
-        <div class="map-legend-item"><div class="map-legend-dot" style="background:#1565c0"></div> US Port of Discharge</div>
-        <div class="map-legend-item"><div class="map-legend-dot" style="background:rgba(255,193,7,0.8)"></div> Route</div>
-      </div>
-    </div>
-    <div id="mapContainer">
-      <svg id="mapSvg"></svg>
-      <div class="map-tooltip" id="mapTooltip"></div>
-    </div>
+  <!-- DATE RANGE FILTER drives KPI panels -->
+  <div class="date-filter">
+    <div><div class="dfl">ETA From</div><input type="date" id="dfFrom"></div>
+    <div><div class="dfl">ETA To</div><input type="date" id="dfTo"></div>
+    <button class="btn-f apply" onclick="applyDateFilter()">Apply to KPIs</button>
+    <button class="btn-f rst" onclick="resetDateFilter()">Reset</button>
+    <span class="df-info" id="dfInfo"></span>
   </div>
 
-  <!-- ══════════ TODAY'S RELEASES ══════════ -->
-  <div class="section-title" id="releases-section">
-    📬 Today's Cargo Releases
-    <span class="today-badge"><span id="todayReleaseCount">—</span> shipments</span>
+  <!-- MAP -->
+  <div class="sec-title" id="map-sec">&#x1F5FA; Global Shipment Flow</div>
+  <div class="map-card" style="margin-bottom:24px">
+    <div class="map-hdr">
+      <div><h3>Origin Countries &rarr; US Ports of Discharge</h3><p>Bubble size = volume &middot; Scroll to zoom &middot; Drag to pan &middot; Click a bubble to view shipments</p></div>
+      <div class="map-legend">
+        <div class="ml-item"><div class="ml-dot" style="background:#ff7043"></div> Origin Country</div>
+        <div class="ml-item"><div class="ml-dot" style="background:#1565c0"></div> US Port</div>
+        <div class="ml-item"><div class="ml-dot" style="background:rgba(255,193,7,.8)"></div> Route</div>
+      </div>
+    </div>
+    <div class="map-controls">
+      <button class="zoom-btn" onclick="zoomMap(1.4)">+</button>
+      <button class="zoom-btn" onclick="zoomMap(0.714)">&minus;</button>
+      <button class="zoom-btn" onclick="resetZoom()" style="font-size:11px;width:auto;padding:0 8px">Reset</button>
+      <span class="zoom-info">Scroll to zoom &middot; Drag to pan &middot; Click bubble for shipments</span>
+    </div>
+    <div id="mapContainer"><svg id="mapSvg"></svg><div class="map-tip" id="mapTip"></div></div>
   </div>
-  <div class="ship-table-wrap" style="margin-bottom:28px">
-    <table class="ship-table">
+
+  <!-- CARGO RELEASES with calendar -->
+  <div class="sec-title" id="rel-sec">
+    &#x1F4EC; Cargo Releases
+    <span class="rel-badge"><span id="relCount">0</span> shipments</span>
+  </div>
+  <div class="cal-row">
+    <span class="cal-label">Date:</span>
+    <input type="date" class="cal-input" id="relDate" onchange="renderReleases()">
+    <div class="cal-nav">
+      <button onclick="shiftDate(-1)">&lsaquo; Prev</button>
+      <button onclick="setToday()">Today</button>
+      <button onclick="shiftDate(1)">Next &rsaquo;</button>
+    </div>
+  </div>
+  <div class="tbl-wrap" style="margin-bottom:24px">
+    <table class="stbl">
       <thead><tr>
         <th>Ref No</th><th>Entry No</th><th>Importer</th><th>Shipper</th>
-        <th>Release Date</th><th>ETA</th><th>Port</th>
+        <th>Release Date</th><th>ETA</th><th>Port of Discharge</th>
         <th>ISF Bill Match</th><th>ISF No Bill Match</th>
         <th>Containers</th><th>Duty Billed</th>
       </tr></thead>
-      <tbody id="todayReleasesBody"><tr><td colspan="11" class="no-data">Loading…</td></tr></tbody>
+      <tbody id="relBody"><tr><td colspan="11" class="nd">Loading&hellip;</td></tr></tbody>
     </table>
   </div>
 
-  <!-- ══════════ B/L SEARCH ══════════ -->
-  <div class="section-title" id="search-section">🔍 Search by House B/L Number</div>
+  <!-- B/L SEARCH -->
+  <div class="sec-title" id="bl-sec">&#x1F50D; Search by House B/L Number</div>
   <div class="search-bar">
-    <input type="text" id="blSearchInput" placeholder="Enter House B/L Number (e.g. 2026000168)" onkeydown="if(event.key==='Enter') searchBL()">
-    <button onclick="searchBL()">Search</button>
+    <input type="text" id="blInput" placeholder="Enter House B/L Number (e.g. 2026000168)" onkeydown="if(event.key==='Enter')doSearch()">
+    <button onclick="doSearch()">Search</button>
   </div>
-  <div id="blSearchResults" style="display:none;margin-bottom:28px">
-    <div class="ship-table-wrap">
-      <table class="ship-table">
-        <thead><tr>
-          <th>Ref No</th><th>Entry No</th><th>Importer</th><th>Shipper</th>
-          <th>ETA</th><th>Actual Arrival</th><th>Release Date</th><th>Port</th>
-          <th>ISF Bill Match</th><th>ISF No Bill Match</th>
-          <th>Containers</th><th>Duty Billed</th>
-        </tr></thead>
-        <tbody id="blSearchBody"></tbody>
+  <div id="blResults" style="display:none;margin-bottom:24px">
+    <div class="tbl-wrap">
+      <table class="stbl">
+        <thead><tr><th>Ref No</th><th>Entry No</th><th>Importer</th><th>Shipper</th><th>ETA</th><th>Arrival</th><th>Release</th><th>Port</th><th>ISF Bill</th><th>ISF No Bill</th><th>Containers</th><th>Duty</th></tr></thead>
+        <tbody id="blBody"></tbody>
       </table>
     </div>
   </div>
 
-  <!-- ══════════ FILTER BAR ══════════ -->
-  <div class="section-title" id="filter-section">⚙ Filter Shipments</div>
-  <div class="filter-bar">
-    <div class="filter-group"><label>ETA From</label><input type="date" id="filterEtaFrom"></div>
-    <div class="filter-group"><label>ETA To</label><input type="date" id="filterEtaTo"></div>
-    <div class="filter-group"><label>ISF Status</label>
-      <select id="filterISF">
-        <option value="">All</option>
-        <option value="bill_match">ISF Bill Match</option>
-        <option value="no_bill_match">ISF No Bill Match</option>
-        <option value="neither">Neither</option>
-      </select>
-    </div>
-    <div class="filter-group"><label>Importer</label><input type="text" id="filterImporter" placeholder="e.g. AMERICAN COLORS"></div>
-    <button class="filter-btn apply" onclick="applyFilters()">Apply</button>
-    <button class="filter-btn clear" onclick="clearFilters()">Clear</button>
-    <span class="filter-results-count" id="filterCount"></span>
+  <!-- SMH26 KPIs - SOURCE OF TRUTH for shipment counts -->
+  <div class="sec-title" id="smh-sec">&#x1F6A2; Shipments (SMH26) <span class="sec-tag" id="smhTag">&#8212;</span></div>
+  <div class="kpi-grid c5">
+    <div class="kpi-card drill" style="--card-color:#1565c0" data-panel="smh26_total" onclick="drillKPI('all','All Shipments')"><div class="kpi-label">Total Shipments</div><div class="kpi-value" id="smhTotal">&#8212;</div><div class="kpi-sub">SMH26 master records</div><div class="kpi-hint">drill in &rarr;</div></div>
+    <div class="kpi-card drill" style="--card-color:#2e7d32" data-panel="smh26_month" onclick="drillKPI('month','Opened This Month')"><div class="kpi-label">This Month</div><div class="kpi-value" id="smhMonth">&#8212;</div><div class="kpi-sub">opened this month</div><div class="kpi-hint">drill in &rarr;</div></div>
+    <div class="kpi-card drill" style="--card-color:#6a1b9a" data-panel="smh26_importers" onclick="drillKPI('importers','By Importer')"><div class="kpi-label">Importers</div><div class="kpi-value" id="smhImporters">&#8212;</div><div class="kpi-sub">unique</div><div class="kpi-hint">drill in &rarr;</div></div>
+    <div class="kpi-card" style="--card-color:#e65100" data-panel="smh26_duty"><div class="kpi-label">Total Duty Billed</div><div class="kpi-value sm" id="smhDuty">&#8212;</div><div class="kpi-sub">USD from SMH26</div></div>
+    <div class="kpi-card" style="--card-color:#00796b" data-panel="smh26_mpf"><div class="kpi-label">Total MPF</div><div class="kpi-value sm" id="smhMPF">&#8212;</div><div class="kpi-sub">merchandise processing</div></div>
   </div>
-  <div id="filteredSection" style="display:none;margin-bottom:28px">
-    <div class="ship-table-wrap">
-      <table class="ship-table">
-        <thead><tr>
-          <th>Ref No</th><th>Entry No</th><th>Importer</th><th>Shipper</th>
-          <th>ETA</th><th>Actual Arrival</th><th>Release Date</th><th>Port</th>
-          <th>ISF Bill Match</th><th>ISF No Bill Match</th>
-          <th>Containers</th><th>Duty Billed</th>
-        </tr></thead>
-        <tbody id="filteredBody"></tbody>
-      </table>
-    </div>
+  <div class="kpi-grid c1" style="margin-top:12px">
+    <div class="card" data-panel="smh26_ports"><h4>Top Ports of Discharge</h4><ul class="bar-list" id="smhPortBars" style="--bar-color:#1565c0"></ul></div>
   </div>
 
-  <!-- ══════════ SHIPMENTS KPI ══════════ -->
-  <div class="section-title" id="smh26-section">🚢 Shipments (SMH26) <span class="section-tag" id="smh26Tag">—</span></div>
-  <div class="kpi-grid cols-5">
-    <div class="kpi-card" style="--card-color:#1565c0" data-panel="smh26_total"><div class="kpi-label">Total Shipments</div><div class="kpi-value" id="smh26Total">—</div><div class="kpi-sub">all records</div></div>
-    <div class="kpi-card" style="--card-color:#2e7d32" data-panel="smh26_month"><div class="kpi-label">This Month</div><div class="kpi-value" id="smh26Month">—</div><div class="kpi-sub">opened this month</div></div>
-    <div class="kpi-card" style="--card-color:#6a1b9a" data-panel="smh26_importers"><div class="kpi-label">Importers</div><div class="kpi-value" id="smh26Importers">—</div><div class="kpi-sub">unique</div></div>
-    <div class="kpi-card" style="--card-color:#e65100" data-panel="smh26_duty"><div class="kpi-label">Total Duty Billed</div><div class="kpi-value sm" id="smh26Duty">—</div><div class="kpi-sub">USD</div></div>
-    <div class="kpi-card" style="--card-color:#00796b" data-panel="smh26_mpf"><div class="kpi-label">Total MPF</div><div class="kpi-value sm" id="smh26MPF">—</div><div class="kpi-sub">merchandise processing</div></div>
+  <!-- CONTAINER KPIs - per-container rows, NOT shipment counts -->
+  <div class="sec-title" id="ctn-sec">&#x1F4E6; Containers <span class="sec-tag" id="ctnTag">&#8212;</span></div>
+  <div class="kpi-grid c5">
+    <div class="kpi-card drill" style="--card-color:#e65100" data-panel="ctn_total" onclick="drillKPI('all','Shipments with Containers')"><div class="kpi-label">Container Records</div><div class="kpi-value" id="ctnTotal">&#8212;</div><div class="kpi-sub">rows in container file</div><div class="kpi-hint">drill in &rarr;</div></div>
+    <div class="kpi-card" style="--card-color:#1565c0" data-panel="ctn_cbm"><div class="kpi-label">Total Volume</div><div class="kpi-value sm" id="ctnCBM">&#8212;</div><div class="kpi-sub">CBM</div></div>
+    <div class="kpi-card" style="--card-color:#2e7d32" data-panel="ctn_weight"><div class="kpi-label">Total Weight</div><div class="kpi-value sm" id="ctnWeight">&#8212;</div><div class="kpi-sub">lbs</div></div>
+    <div class="kpi-card" style="--card-color:#f57f17" data-panel="ctn_pieces"><div class="kpi-label">Total Pieces</div><div class="kpi-value sm" id="ctnPieces">&#8212;</div><div class="kpi-sub">units</div></div>
+    <div class="kpi-card" style="--card-color:#6a1b9a" data-panel="ctn_types"><div class="kpi-label">Container Types</div><div class="kpi-value sm" id="ctnTypes" style="font-size:12px;padding-top:6px">&#8212;</div><div class="kpi-sub">type breakdown</div></div>
   </div>
-  <div class="kpi-grid cols-1" style="margin-top:14px">
-    <div class="card" data-panel="smh26_ports">
-      <h4>Top Ports of Discharge</h4>
-      <ul class="bar-list" id="smh26PortBars" style="--bar-color:#1565c0"></ul>
-    </div>
-  </div>
-
-  <!-- ══════════ CONTAINERS KPI ══════════ -->
-  <div class="section-title" id="ctn-section">📦 Containers <span class="section-tag" id="containerTag">—</span></div>
-  <div class="kpi-grid cols-5">
-    <div class="kpi-card" style="--card-color:#e65100" data-panel="ctn_total"><div class="kpi-label">Total Containers</div><div class="kpi-value" id="ctnTotal">—</div><div class="kpi-sub">all records</div></div>
-    <div class="kpi-card" style="--card-color:#1565c0" data-panel="ctn_cbm"><div class="kpi-label">Total Volume</div><div class="kpi-value sm" id="ctnCBM">—</div><div class="kpi-sub">CBM</div></div>
-    <div class="kpi-card" style="--card-color:#2e7d32" data-panel="ctn_weight"><div class="kpi-label">Total Weight</div><div class="kpi-value sm" id="ctnWeight">—</div><div class="kpi-sub">lbs</div></div>
-    <div class="kpi-card" style="--card-color:#f57f17" data-panel="ctn_pieces"><div class="kpi-label">Total Pieces</div><div class="kpi-value sm" id="ctnPieces">—</div><div class="kpi-sub">units</div></div>
-    <div class="kpi-card" style="--card-color:#6a1b9a" data-panel="ctn_types"><div class="kpi-label">Container Types</div><div class="kpi-value sm" id="ctnTypes" style="font-size:13px;padding-top:6px">—</div><div class="kpi-sub">breakdown</div></div>
-  </div>
-  <div class="kpi-grid cols-2" style="margin-top:14px">
+  <div class="kpi-grid c2" style="margin-top:12px">
     <div class="card" data-panel="ctn_statuses"><h4>Status Breakdown</h4><div class="chip-list" id="ctnStatuses"></div></div>
-    <div class="card" data-panel="ctn_contents"><h4>Top Cargo Contents</h4><ul class="bar-list" id="ctnContentBars" style="--bar-color:#e65100"></ul></div>
+    <div class="card" data-panel="ctn_contents"><h4>Top Cargo Contents</h4><ul class="bar-list" id="ctnContents" style="--bar-color:#e65100"></ul></div>
   </div>
 
-  <!-- ══════════ CHB KPI ══════════ -->
-  <div class="section-title" id="chb-section">📋 CHB Entries <span class="section-tag" id="chbTag">—</span></div>
-  <div class="kpi-grid cols-4">
-    <div class="kpi-card" style="--card-color:#00796b" data-panel="chb_total"><div class="kpi-label">Total Entries</div><div class="kpi-value" id="chbTotal">—</div><div class="kpi-sub">all line items</div></div>
-    <div class="kpi-card" style="--card-color:#2e7d32" data-panel="chb_released"><div class="kpi-label">Released</div><div class="kpi-value" id="chbReleased">—</div><div class="kpi-sub">cargo released</div></div>
-    <div class="kpi-card" style="--card-color:#c62828" data-panel="chb_pending"><div class="kpi-label">Pending Release</div><div class="kpi-value" id="chbPending">—</div><div class="kpi-sub">awaiting release</div></div>
-    <div class="kpi-card" style="--card-color:#e65100" data-panel="chb_avgduty"><div class="kpi-label">Avg Duty Rate</div><div class="kpi-value sm" id="chbAvgDuty">—</div><div class="kpi-sub">value duty rate %</div></div>
+  <!-- CHB KPIs - per-invoice-line rows, released/pending based on SMH26 -->
+  <div class="sec-title" id="chb-sec">&#x1F4CB; CHB Entries <span class="sec-tag" id="chbTag">&#8212;</span></div>
+  <div class="kpi-grid c4">
+    <div class="kpi-card" style="--card-color:#00796b" data-panel="chb_total"><div class="kpi-label">Invoice Line Items</div><div class="kpi-value" id="chbTotal">&#8212;</div><div class="kpi-sub">rows in CHB file</div></div>
+    <div class="kpi-card drill" style="--card-color:#2e7d32" data-panel="chb_released" onclick="drillKPI('released','Released Shipments')"><div class="kpi-label">Released Shipments</div><div class="kpi-value" id="chbReleased">&#8212;</div><div class="kpi-sub">from SMH26 master</div><div class="kpi-hint">drill in &rarr;</div></div>
+    <div class="kpi-card drill" style="--card-color:#c62828" data-panel="chb_pending" onclick="drillKPI('pending','Pending Release')"><div class="kpi-label">Pending Release</div><div class="kpi-value" id="chbPending">&#8212;</div><div class="kpi-sub">from SMH26 master</div><div class="kpi-hint">drill in &rarr;</div></div>
+    <div class="kpi-card" style="--card-color:#e65100" data-panel="chb_avgduty"><div class="kpi-label">Avg Duty Rate</div><div class="kpi-value sm" id="chbAvgDuty">&#8212;</div><div class="kpi-sub">value duty rate %</div></div>
   </div>
-  <div class="kpi-grid cols-3" style="margin-top:14px">
-    <div class="card" data-panel="chb_duty">
-      <h4>Total CHB Duty</h4>
-      <div style="font-size:30px;font-weight:700;color:#00796b;margin:8px 0" id="chbDutyBig">—</div>
-      <div style="font-size:12px;color:var(--muted)">Liquidated: <span id="chbLiqDuty" style="color:var(--text2);font-weight:600">—</span></div>
-    </div>
+  <div class="kpi-grid c3" style="margin-top:12px">
+    <div class="card" data-panel="chb_duty"><h4>Total CHB Duty</h4><div style="font-size:28px;font-weight:700;color:#00796b;margin:8px 0" id="chbDutyBig">&#8212;</div><div style="font-size:12px;color:var(--muted)">Liquidated: <span id="chbLiqDuty" style="color:var(--text2);font-weight:600">&#8212;</span></div></div>
     <div class="card" data-panel="chb_countries"><h4>Top Countries of Origin</h4><ul class="bar-list" id="chbCountryBars" style="--bar-color:#00796b"></ul></div>
-    <div class="card" data-panel="chb_release_donut">
-      <h4>Release Status</h4>
+    <div class="card" data-panel="chb_donut">
+      <h4>Shipment Release Status (from SMH26)</h4>
       <div class="release-wrap">
-        <svg class="donut-svg" width="90" height="90" viewBox="0 0 90 90">
+        <svg width="90" height="90" viewBox="0 0 90 90">
           <circle cx="45" cy="45" r="35" fill="none" stroke="#f0f4f8" stroke-width="10"/>
-          <circle id="donutReleased" cx="45" cy="45" r="35" fill="none" stroke="#2e7d32" stroke-width="10" stroke-dasharray="0 220" stroke-dashoffset="55" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .8s ease"/>
-          <circle id="donutPending"  cx="45" cy="45" r="35" fill="none" stroke="#c62828" stroke-width="10" stroke-dasharray="0 220" stroke-dashoffset="55" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .8s ease"/>
+          <circle id="donutR" cx="45" cy="45" r="35" fill="none" stroke="#2e7d32" stroke-width="10" stroke-dasharray="0 220" stroke-dashoffset="55" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .8s"/>
+          <circle id="donutP" cx="45" cy="45" r="35" fill="none" stroke="#c62828" stroke-width="10" stroke-dasharray="0 220" stroke-dashoffset="55" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .8s"/>
         </svg>
         <div>
-          <div class="leg-item"><div class="leg-dot" style="background:#2e7d32"></div>Released: <strong id="donutRelLabel">—</strong></div>
-          <div class="leg-item"><div class="leg-dot" style="background:#c62828"></div>Pending: <strong id="donutPendLabel">—</strong></div>
+          <div class="leg-item"><div class="leg-dot" style="background:#2e7d32"></div>Released: <strong id="dRL">&#8212;</strong></div>
+          <div class="leg-item"><div class="leg-dot" style="background:#c62828"></div>Pending: <strong id="dPL">&#8212;</strong></div>
         </div>
       </div>
     </div>
   </div>
 
-  <footer>OVLogiPulse · Supply Chain Intelligence · SMH26 · Container · CHB · Auto-refreshes every 60s</footer>
+  <footer>OVLogiPulse &middot; SMH26 = master shipment record &middot; Container & CHB = detail only &middot; Hourly sync</footer>
 </main>
 </div>
 
-<!-- SHIPMENT DETAIL MODAL -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+<!-- DETAIL MODAL -->
+<div class="moverlay" id="detailOv" onclick="closeDet(event)">
   <div class="modal">
-    <button class="modal-close" onclick="closeModalDirect()">✕</button>
-    <div class="modal-hero">
-      <div class="modal-hero-icon">🚢</div>
-      <div>
-        <h3 id="modalTitle">Shipment Detail</h3>
-        <div class="modal-sub" id="modalSub"></div>
-      </div>
+    <button class="mc" onclick="closeDetD()">&#x2715;</button>
+    <div class="modal-hero"><div class="micon">&#x1F6A2;</div><div><h3 id="detT">Shipment</h3><div class="msub" id="detS"></div></div></div>
+    <div class="msec">Overview</div><div class="mgrid" id="detO"></div>
+    <div class="msec">Key Dates</div><div class="mgrid" id="detD"></div>
+    <div class="msec">Container &amp; Cargo</div><div class="mgrid" id="detC"></div>
+    <div class="msec">CHB / Customs</div><div class="mgrid" id="detH"></div>
+  </div>
+</div>
+
+<!-- DRILL MODAL -->
+<div class="moverlay" id="drillOv" onclick="closeDrill(event)">
+  <div class="modal">
+    <button class="mc" onclick="closeDrillD()">&#x2715;</button>
+    <div class="modal-hero"><div class="micon">&#x1F4CA;</div><div><h3 id="drillT">Shipments</h3><div class="msub">Click any Ref No for full detail &middot; Data from SMH26 master</div></div></div>
+    <div class="drill-info" id="drillInfo"></div>
+    <div class="tbl-wrap" style="max-height:480px">
+      <table class="stbl">
+        <thead><tr><th>Ref No</th><th>Entry No</th><th>Importer</th><th>Shipper</th><th>ETA</th><th>Release Date</th><th>Port</th><th>Duty Billed</th></tr></thead>
+        <tbody id="drillBody"></tbody>
+      </table>
     </div>
-    <div class="modal-section-title">📦 Shipment Overview</div>
-    <div class="modal-grid" id="modalOverview"></div>
-    <div class="modal-section-title">📅 Key Dates</div>
-    <div class="modal-grid" id="modalDates"></div>
-    <div class="modal-section-title">🚢 Container & Cargo</div>
-    <div class="modal-grid" id="modalCargo"></div>
-    <div class="modal-section-title">📋 CHB / Customs</div>
-    <div class="modal-grid" id="modalCHB"></div>
+  </div>
+</div>
+
+<!-- MAP LOCATION MODAL -->
+<div class="moverlay" id="mapOv" onclick="closeMapM(event)">
+  <div class="modal">
+    <button class="mc" onclick="closeMapMD()">&#x2715;</button>
+    <div class="modal-hero"><div class="micon" id="mapMIcon">&#x1F4CD;</div><div><h3 id="mapMT">Location</h3><div class="msub" id="mapMS"></div></div></div>
+    <div class="drill-info" id="mapMInfo"></div>
+    <div class="tbl-wrap" style="max-height:480px">
+      <table class="stbl">
+        <thead><tr><th>Ref No</th><th>Entry No</th><th>Importer</th><th>Shipper</th><th>ETA</th><th>Release</th><th>Port</th><th>Containers</th><th>Duty</th></tr></thead>
+        <tbody id="mapMBody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 <!-- CUSTOMIZE DRAWER -->
-<div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+<div class="doverlay" id="dOverlay" onclick="toggleDrawer()"></div>
 <div class="drawer" id="drawer">
-  <div class="drawer-header"><span>Customize Dashboard</span><button class="drawer-close" onclick="toggleDrawer()">✕</button></div>
-  <div class="drawer-body">
-    <div class="drawer-section">
-      <div class="drawer-section-title">🚢 Shipments</div>
-      <label class="toggle-row"><span>Total Shipments</span><input type="checkbox" data-panel="smh26_total" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>This Month</span><input type="checkbox" data-panel="smh26_month" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Unique Importers</span><input type="checkbox" data-panel="smh26_importers" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Total Duty Billed</span><input type="checkbox" data-panel="smh26_duty" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Total MPF</span><input type="checkbox" data-panel="smh26_mpf" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Top Discharge Ports</span><input type="checkbox" data-panel="smh26_ports" onchange="togglePanel(this)"></label>
+  <div class="dhdr"><span>Customize Dashboard</span><button class="dclose" onclick="toggleDrawer()">&#x2715;</button></div>
+  <div class="dbody">
+    <div class="dsec"><div class="dsec-title">&#x1F6A2; Shipments</div>
+      <label class="trow"><span>Total Shipments</span><input type="checkbox" data-panel="smh26_total" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>This Month</span><input type="checkbox" data-panel="smh26_month" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Unique Importers</span><input type="checkbox" data-panel="smh26_importers" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Total Duty Billed</span><input type="checkbox" data-panel="smh26_duty" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Total MPF</span><input type="checkbox" data-panel="smh26_mpf" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Top Discharge Ports</span><input type="checkbox" data-panel="smh26_ports" onchange="togglePanel(this)"></label>
     </div>
-    <div class="drawer-section">
-      <div class="drawer-section-title">📦 Containers</div>
-      <label class="toggle-row"><span>Total Containers</span><input type="checkbox" data-panel="ctn_total" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Total Volume (CBM)</span><input type="checkbox" data-panel="ctn_cbm" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Total Weight</span><input type="checkbox" data-panel="ctn_weight" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Total Pieces</span><input type="checkbox" data-panel="ctn_pieces" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Container Types</span><input type="checkbox" data-panel="ctn_types" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Status Breakdown</span><input type="checkbox" data-panel="ctn_statuses" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Top Cargo Contents</span><input type="checkbox" data-panel="ctn_contents" onchange="togglePanel(this)"></label>
+    <div class="dsec"><div class="dsec-title">&#x1F4E6; Containers</div>
+      <label class="trow"><span>Container Records</span><input type="checkbox" data-panel="ctn_total" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Total Volume (CBM)</span><input type="checkbox" data-panel="ctn_cbm" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Total Weight</span><input type="checkbox" data-panel="ctn_weight" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Total Pieces</span><input type="checkbox" data-panel="ctn_pieces" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Container Types</span><input type="checkbox" data-panel="ctn_types" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Status Breakdown</span><input type="checkbox" data-panel="ctn_statuses" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Top Cargo Contents</span><input type="checkbox" data-panel="ctn_contents" onchange="togglePanel(this)"></label>
     </div>
-    <div class="drawer-section">
-      <div class="drawer-section-title">📋 CHB Entries</div>
-      <label class="toggle-row"><span>Total Entries</span><input type="checkbox" data-panel="chb_total" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Released Count</span><input type="checkbox" data-panel="chb_released" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Pending Release</span><input type="checkbox" data-panel="chb_pending" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Avg Duty Rate</span><input type="checkbox" data-panel="chb_avgduty" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Total CHB Duty</span><input type="checkbox" data-panel="chb_duty" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Top Countries</span><input type="checkbox" data-panel="chb_countries" onchange="togglePanel(this)"></label>
-      <label class="toggle-row"><span>Release Status Donut</span><input type="checkbox" data-panel="chb_release_donut" onchange="togglePanel(this)"></label>
+    <div class="dsec"><div class="dsec-title">&#x1F4CB; CHB Entries</div>
+      <label class="trow"><span>Invoice Line Items</span><input type="checkbox" data-panel="chb_total" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Released Shipments</span><input type="checkbox" data-panel="chb_released" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Pending Release</span><input type="checkbox" data-panel="chb_pending" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Avg Duty Rate</span><input type="checkbox" data-panel="chb_avgduty" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Total CHB Duty</span><input type="checkbox" data-panel="chb_duty" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Top Countries</span><input type="checkbox" data-panel="chb_countries" onchange="togglePanel(this)"></label>
+      <label class="trow"><span>Release Status Donut</span><input type="checkbox" data-panel="chb_donut" onchange="togglePanel(this)"></label>
     </div>
-    <button class="drawer-reset" onclick="resetPanels()">Reset to Default</button>
+    <button class="dreset" onclick="resetPanels()">Reset to Default</button>
   </div>
 </div>
 
 <script>
-var webAppUrl = "https://script.google.com/macros/s/AKfycbwGhNtW5dEKIGPTXNXgo7JswcH4MZofQtl9VATf93YiIT_e7YRHGQojsnS0TVc7x9S8fA/exec";
-var timer = null;
-var allShipments = [];
+var WEB_APP="https://script.google.com/macros/s/AKfycbwGhNtW5dEKIGPTXNXgo7JswcH4MZofQtl9VATf93YiIT_e7YRHGQojsnS0TVc7x9S8fA/exec";
+var allShipments=[], rawKPI={}, activeFilter=null, timer=null;
 
-window.onload = function() {
+window.onload=function(){
+  setToday();
+  document.getElementById("relDate").addEventListener("change",renderReleases);
   loadData();
   startTimer();
   initMap();
+  loadPanelPrefs();
 };
 
-function startTimer() {
-  if (timer) clearInterval(timer);
-  timer = setInterval(loadData, 60000);
-}
+function startTimer(){if(timer)clearInterval(timer);timer=setInterval(loadData,60000);}
 
-function loadData() {
-  var btn = document.getElementById("refreshBtn");
+// ── LOAD DATA ──────────────────────────────────────────
+function loadData(){
+  var btn=document.getElementById("refreshBtn");
   btn.classList.add("spinning");
-  setStatus("idle", "Syncing…");
-  fetch(webAppUrl)
-    .then(function(r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
-    .then(function(data) {
-      if (!data.ok) throw new Error("Script error");
-      renderAll(data);
-      document.getElementById("lastChecked").textContent = "Updated " + new Date().toLocaleTimeString();
-      setStatus("active", "Live · hourly sync");
+  setStatus("idle","Syncing\u2026");
+  fetch(WEB_APP)
+    .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();})
+    .then(function(data){
+      if(!data.ok)throw new Error("Script error");
+      rawKPI=data.kpi||{};
+      // DEDUPLICATE by REFERENCE NO — SMH26 is master, one row per shipment
+      var seen={};
+      allShipments=(data.shipments||[]).filter(function(s){
+        var ref=s["REFERENCE NO"];
+        if(!ref||seen[ref])return false;
+        seen[ref]=true;
+        return true;
+      });
+      renderKPIs(allShipments,rawKPI);
+      renderReleases();
+      updateMapData(rawKPI);
+      document.getElementById("lastChecked").textContent="Updated "+new Date().toLocaleTimeString();
+      setStatus("active","Live \u00b7 hourly sync");
     })
-    .catch(function(e) {
-      setStatus("error", "Connection error");
-      document.getElementById("lastChecked").textContent = "Error: " + e.message;
-    })
-    .finally(function() { btn.classList.remove("spinning"); });
+    .catch(function(e){setStatus("error","Connection error");document.getElementById("lastChecked").textContent="Error: "+e.message;})
+    .finally(function(){btn.classList.remove("spinning");});
 }
 
-function renderAll(data) {
-  var k = data.kpi || {};
-  set("smh26Total",    fmt(k.smh26_total_shipments));
-  set("smh26Month",    fmt(k.smh26_shipments_this_month));
-  set("smh26Importers",fmt(k.smh26_unique_importers));
-  set("smh26Duty",     money(k.smh26_total_duty_billed));
-  set("smh26MPF",      money(k.smh26_total_mpf));
-  set("smh26Tag",      (k.smh26_total_shipments||"—") + " records");
-  renderBars("smh26PortBars", k.smh26_top_ports);
-
-  set("ctnTotal",  fmt(k.container_total));
-  set("ctnCBM",    num(k.container_total_cbm,0) + " CBM");
-  set("ctnWeight", num(k.container_total_weight_lbs,0) + " lbs");
-  set("ctnPieces", fmt(k.container_total_pieces));
-  set("containerTag", (k.container_total||"—") + " records");
-  var ct = parseTopN(k.container_types);
-  set("ctnTypes", ct.map(function(i){return i.label+"("+i.count+")";}).join(" · ")||"—");
-  renderChips("ctnStatuses", parseTopN(k.container_statuses));
-  renderBars("ctnContentBars", k.container_top_contents);
-
-  var released = parseInt(k.chb_released_count)||0, pending = parseInt(k.chb_pending_count)||0;
-  set("chbTotal",     fmt(k.chb_total_entries));
-  set("chbReleased",  fmt(released));
-  set("chbPending",   fmt(pending));
-  set("chbAvgDuty",   num(k.chb_avg_duty_rate,1)+"%");
-  set("chbDutyBig",   money(k.chb_total_duty));
-  set("chbLiqDuty",   money(k.chb_liquidated_duty));
-  set("chbTag",       (k.chb_total_entries||"—") + " records");
-  set("donutRelLabel",released.toLocaleString());
-  set("donutPendLabel",pending.toLocaleString());
-  renderBars("chbCountryBars", k.chb_top_countries);
-  renderDonut(released, pending, released+pending);
-
-  allShipments = data.shipments || [];
-  renderTodayReleases();
-  updateMapWithData(k);
-}
-
-// MAP
-var mapProjection, mapPath, mapSvgEl;
-
-// Port of discharge → lat/lng
-var PORT_COORDS = {
-  "NEW YORK/NEWARK AREA": [40.6840, -74.1745],
-  "LOS ANGELES, CA":      [33.7395, -118.2617],
-  "NEW YORK, NY":         [40.7128, -74.0060],
-  "JFK AIRPORT":          [40.6413, -73.7781],
-  "SAVANNAH, GA":         [32.0835, -81.0998],
-  "BUFFALO-NIAGARA FALLS":[42.8864, -78.8784],
-  "LONG BEACH, CA":       [33.7701, -118.1937],
-  "PT OF NORFOLK-NWPT NWS":[36.9460,-76.3152],
-  "LOS ANGELES INT AIRPORT":[33.9425,-118.4081],
-  "HOUSTON, TX":          [29.7604, -95.3698],
-  "CHARLESTON, SC":       [32.7765, -79.9311],
-  "BOSTON, MA":           [42.3601, -71.0589],
-  "CHICAGO, IL":          [41.8781, -87.6298],
-  "SEATTLE, WA":          [47.6062, -122.3321],
-  "METROPOLITAN OAKLAND INT":[37.7213,-122.2208],
-  "SAN FRANCISCO INTL AIRPO":[37.6213,-122.3790],
-  "DALLAS/FT WORTH TX":  [32.8998, -97.0403],
-  "ATLANTA INTL AIRPORT (AT":[33.6407,-84.4277],
-  "CLEVELAND, OH":       [41.4993, -81.6944],
-  "ST. LOUIS, MO":       [38.6270, -90.1994]
-};
-
-// Country of origin → approximate lat/lng
-var COUNTRY_COORDS = {
-  "CN-CHINA(MAINLAND)": [35.8617,  104.1954],
-  "IN-INDIA":           [20.5937,   78.9629],
-  "TW-TAIWAN":          [23.6978,  120.9605],
-  "ID-INDONESIA":       [-0.7893,  113.9213],
-  "NP-NEPAL":           [28.3949,   84.1240],
-  "FR-FRANCE":          [46.2276,    2.2137],
-  "IT-ITALY":           [41.8719,   12.5674],
-  "VN-VIETNAM":         [14.0583,  108.2772],
-  "XO-ONTARIO":         [51.2538,  -85.3232],
-  "TR-TURKIYE":         [38.9637,   35.2433],
-  "TH-THAILAND":        [15.8700,  100.9925],
-  "BD-BANGLADESH":      [23.6850,   90.3563],
-  "MY-MALAYSIA":        [ 4.2105,  101.9758],
-  "DE-GERMANY, FED. REPUBLIC":[51.1657,10.4515],
-  "RO-ROMANIA":         [45.9432,   24.9668],
-  "AU-AUSTRALIA":       [-25.2744, 133.7751],
-  "PE-PERU":            [-9.1900,  -75.0152],
-  "IL-ISRAEL":          [31.0461,   34.8516],
-  "ES-SPAIN":           [40.4637,   -3.7492],
-  "NL-NETHERLANDS":     [52.1326,    5.2913]
-};
-
-function initMap() {
-  var container = document.getElementById("mapContainer");
-  var w = container.offsetWidth || 900, h = 420;
-
-  mapProjection = d3.geoNaturalEarth1()
-    .scale(w / 6.5)
-    .translate([w / 2, h / 2]);
-
-  mapPath = d3.geoPath().projection(mapProjection);
-  mapSvgEl = d3.select("#mapSvg").attr("viewBox", "0 0 " + w + " " + h);
-
-  // Ocean background
-  mapSvgEl.append("rect").attr("width", w).attr("height", h).attr("fill", "#cfe8f5");
-
-  // Load world topojson
-  fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
-    .then(function(r){ return r.json(); })
-    .then(function(world){
-      var countries = topojson.feature(world, world.objects.countries);
-      mapSvgEl.append("g").attr("class","countries")
-        .selectAll("path")
-        .data(countries.features)
-        .enter().append("path")
-        .attr("d", mapPath)
-        .attr("fill", "#e8f0e9")
-        .attr("stroke", "#c5d5c6")
-        .attr("stroke-width", 0.4);
-
-      // Graticule
-      var graticule = d3.geoGraticule()();
-      mapSvgEl.append("path").datum(graticule)
-        .attr("d", mapPath)
-        .attr("fill","none").attr("stroke","rgba(100,150,180,0.15)").attr("stroke-width",0.5);
-
-      // Add static known ports and origins once map is ready
-      drawStaticMapPoints();
-    })
-    .catch(function(){ drawStaticMapPoints(); });
-}
-
-function drawStaticMapPoints() {
-  var tooltip = document.getElementById("mapTooltip");
-
-  // Draw origin country dots
-  Object.keys(COUNTRY_COORDS).forEach(function(country) {
-    var coord = COUNTRY_COORDS[country];
-    var pt = mapProjection([coord[1], coord[0]]);
-    if (!pt) return;
-    mapSvgEl.append("circle")
-      .attr("cx", pt[0]).attr("cy", pt[1]).attr("r", 5)
-      .attr("fill", "#ff7043").attr("fill-opacity", 0.7)
-      .attr("stroke", "#fff").attr("stroke-width", 1)
-      .style("cursor","pointer")
-      .on("mouseover", function(event) {
-        tooltip.style.opacity = "1";
-        tooltip.innerHTML = "<strong>" + country + "</strong>Origin country";
-        tooltip.style.left = (event.offsetX + 12) + "px";
-        tooltip.style.top  = (event.offsetY - 10) + "px";
-      })
-      .on("mouseout", function(){ tooltip.style.opacity = "0"; });
-  });
-
-  // Draw US port dots
-  Object.keys(PORT_COORDS).forEach(function(port) {
-    var coord = PORT_COORDS[port];
-    var pt = mapProjection([coord[1], coord[0]]);
-    if (!pt) return;
-    mapSvgEl.append("circle")
-      .attr("cx", pt[0]).attr("cy", pt[1]).attr("r", 7)
-      .attr("fill", "#1565c0").attr("fill-opacity", 0.85)
-      .attr("stroke", "#fff").attr("stroke-width", 1.5)
-      .style("cursor","pointer")
-      .on("mouseover", function(event) {
-        tooltip.style.opacity = "1";
-        tooltip.innerHTML = "<strong>" + port + "</strong>Port of Discharge";
-        tooltip.style.left = (event.offsetX + 12) + "px";
-        tooltip.style.top  = (event.offsetY - 10) + "px";
-      })
-      .on("mouseout", function(){ tooltip.style.opacity = "0"; });
-  });
-}
-
-function updateMapWithData(k) {
-  if (!mapSvgEl || !mapProjection) return;
-  // Remove old arcs and sized circles
-  mapSvgEl.selectAll(".route-arc,.port-sized,.origin-sized").remove();
-
-  var tooltip = document.getElementById("mapTooltip");
-
-  // Parse top ports and countries
-  var topPorts    = parseTopN(k.smh26_top_ports    || "").slice(0,8);
-  var topCountries= parseTopN(k.chb_top_countries  || "").slice(0,10);
-
-  if (!topPorts.length || !topCountries.length) return;
-  var maxPort    = topPorts[0].count    || 1;
-  var maxCountry = topCountries[0].count|| 1;
-
-  // Draw arc routes (top 3 countries → top 3 ports)
-  var arcGroup = mapSvgEl.append("g").attr("class","route-arc");
-  topCountries.slice(0,5).forEach(function(c) {
-    var cCoord = COUNTRY_COORDS[c.label];
-    if (!cCoord) return;
-    var src = mapProjection([cCoord[1], cCoord[0]]);
-    if (!src) return;
-    topPorts.slice(0,3).forEach(function(p) {
-      var pCoord = PORT_COORDS[p.label];
-      if (!pCoord) return;
-      var dst = mapProjection([pCoord[1], pCoord[0]]);
-      if (!dst) return;
-      var mx = (src[0]+dst[0])/2, my = Math.min(src[1],dst[1]) - 40;
-      arcGroup.append("path")
-        .attr("d","M"+src[0]+","+src[1]+" Q"+mx+","+my+" "+dst[0]+","+dst[1])
-        .attr("fill","none")
-        .attr("stroke","rgba(255,193,7,0.35)")
-        .attr("stroke-width", 1)
-        .attr("stroke-dasharray","4,3");
-    });
-  });
-
-  // Sized port circles
-  topPorts.forEach(function(p) {
-    var pCoord = PORT_COORDS[p.label];
-    if (!pCoord) return;
-    var pt = mapProjection([pCoord[1], pCoord[0]]);
-    if (!pt) return;
-    var r = 5 + (p.count / maxPort) * 18;
-    mapSvgEl.append("circle").attr("class","port-sized")
-      .attr("cx",pt[0]).attr("cy",pt[1]).attr("r",r)
-      .attr("fill","rgba(21,101,192,0.25)")
-      .attr("stroke","#1565c0").attr("stroke-width",1.5)
-      .style("cursor","pointer")
-      .on("mouseover",function(event){
-        tooltip.style.opacity="1";
-        tooltip.innerHTML="<strong>"+p.label+"</strong>"+p.count+" shipments";
-        tooltip.style.left=(event.offsetX+12)+"px";
-        tooltip.style.top=(event.offsetY-10)+"px";
-      })
-      .on("mouseout",function(){tooltip.style.opacity="0";});
-  });
-
-  // Sized origin circles
-  topCountries.forEach(function(c) {
-    var cCoord = COUNTRY_COORDS[c.label];
-    if (!cCoord) return;
-    var pt = mapProjection([cCoord[1], cCoord[0]]);
-    if (!pt) return;
-    var r = 4 + (c.count / maxCountry) * 12;
-    mapSvgEl.append("circle").attr("class","origin-sized")
-      .attr("cx",pt[0]).attr("cy",pt[1]).attr("r",r)
-      .attr("fill","rgba(255,112,67,0.3)")
-      .attr("stroke","#ff7043").attr("stroke-width",1.5)
-      .style("cursor","pointer")
-      .on("mouseover",function(event){
-        tooltip.style.opacity="1";
-        tooltip.innerHTML="<strong>"+c.label+"</strong>"+c.count+" entries";
-        tooltip.style.left=(event.offsetX+12)+"px";
-        tooltip.style.top=(event.offsetY-10)+"px";
-      })
-      .on("mouseout",function(){tooltip.style.opacity="0";});
-  });
-}
-
-// TODAY'S RELEASES
-function renderTodayReleases() {
-  var today = todayStr();
-  var releases = allShipments.filter(function(s){ return normalizeDate(s["CHB CARGO RELEASE DATE"])===today; });
-  document.getElementById("todayReleaseCount").textContent = releases.length;
-  document.getElementById("sidebarReleaseCount").textContent = releases.length;
-  var tbody = document.getElementById("todayReleasesBody");
-  if (!releases.length) { tbody.innerHTML='<tr><td colspan="11" class="no-data">No cargo releases today ('+today+')</td></tr>'; return; }
-  tbody.innerHTML = releases.map(function(s){ return shipRow(s,11,true); }).join("");
-}
-
-// FILTERS
-function applyFilters() {
-  var etaFrom=document.getElementById("filterEtaFrom").value;
-  var etaTo=document.getElementById("filterEtaTo").value;
-  var isf=document.getElementById("filterISF").value;
-  var imp=document.getElementById("filterImporter").value.trim().toUpperCase();
-  var results=allShipments.filter(function(s){
-    var eta=normalizeDate(s["ETA DATE"]);
-    if(etaFrom&&eta<etaFrom)return false;
-    if(etaTo&&eta>etaTo)return false;
-    if(imp&&s["IMPORTER NAME"].toUpperCase().indexOf(imp)===-1)return false;
-    if(isf==="bill_match"&&!s["ISF BILL MATCH DATE"])return false;
-    if(isf==="no_bill_match"&&!s["ISF NO BILL MATCH DATE"])return false;
-    if(isf==="neither"&&(s["ISF BILL MATCH DATE"]||s["ISF NO BILL MATCH DATE"]))return false;
+// ── DATE FILTER (updates KPI panels only) ──────────────
+function applyDateFilter(){
+  var from=document.getElementById("dfFrom").value, to=document.getElementById("dfTo").value;
+  if(!from&&!to){resetDateFilter();return;}
+  activeFilter={from:from,to:to};
+  var filtered=allShipments.filter(function(s){
+    var eta=nd(s["ETA DATE"]);
+    if(from&&eta<from)return false;
+    if(to&&eta>to)return false;
     return true;
   });
-  document.getElementById("filterCount").textContent=results.length+" result"+(results.length!==1?"s":"");
-  document.getElementById("filteredSection").style.display="";
-  var tbody=document.getElementById("filteredBody");
-  if(!results.length){tbody.innerHTML='<tr><td colspan="12" class="no-data">No shipments match</td></tr>';return;}
-  tbody.innerHTML=results.map(function(s){return shipRow(s,12,false);}).join("");
+  document.getElementById("dfInfo").textContent=filtered.length+" shipments in ETA range";
+  renderKPIs(filtered,null);
 }
-function clearFilters(){
-  ["filterEtaFrom","filterEtaTo","filterISF","filterImporter"].forEach(function(id){document.getElementById(id).value="";});
-  document.getElementById("filterCount").textContent="";
-  document.getElementById("filteredSection").style.display="none";
+function resetDateFilter(){
+  activeFilter=null;
+  document.getElementById("dfInfo").textContent="";
+  document.getElementById("dfFrom").value="";
+  document.getElementById("dfTo").value="";
+  renderKPIs(allShipments,rawKPI);
 }
 
-// B/L SEARCH
-function searchBL(){
-  var q=document.getElementById("blSearchInput").value.trim().toUpperCase();
-  if(!q)return;
-  var results=allShipments.filter(function(s){
-    return (s["MANIFEST HOUSE B/L NUMBER"]||"").toUpperCase().indexOf(q)!==-1||(s["BL NUMBER MASTER"]||"").toUpperCase().indexOf(q)!==-1;
+// ── RENDER KPIs ────────────────────────────────────────
+// IMPORTANT: all shipment counts come from SMH26 deduplicated rows
+// Container and CHB row counts come from server (they are file-level counts, not shipment counts)
+function renderKPIs(rows,kpi){
+  var nm=new Date().getMonth(),ny=new Date().getFullYear();
+  var total=rows.length;
+  var thisMonth=rows.filter(function(r){
+    var d=r["DATE OPENED"]?new Date(r["DATE OPENED"]):null;
+    return d&&d.getMonth()===nm&&d.getFullYear()===ny;
+  }).length;
+  var imp={},duty=0,mpf=0,ports={};
+  rows.forEach(function(r){
+    if(r["IMPORTER NAME"]&&r["IMPORTER NAME"].trim())imp[r["IMPORTER NAME"].trim()]=1;
+    duty+=parseFloat(r["DUTY BILLED"])||0;
+    mpf +=parseFloat(r["TOTAL MPF"])||0;
+    var p=(r["CHB PORT OF DCHG NAME"]||"").trim();
+    if(p)ports[p]=(ports[p]||0)+1;
   });
-  document.getElementById("blSearchResults").style.display="";
-  var tbody=document.getElementById("blSearchBody");
-  if(!results.length){tbody.innerHTML='<tr><td colspan="12" class="no-data">No results for "'+q+'"</td></tr>';return;}
-  tbody.innerHTML=results.map(function(s){return shipRow(s,12,false);}).join("");
+  // Released/pending from SMH26 cargo release date — correct because SMH26 is one row per shipment
+  var released=rows.filter(function(r){return (r["CHB CARGO RELEASE DATE"]||"").replace(/[\s\/]/g,"").length>2;}).length;
+  var pending=total-released;
+
+  s("smhTotal",fmt(total));s("smhMonth",fmt(thisMonth));
+  s("smhImporters",fmt(Object.keys(imp).length));
+  s("smhDuty",money(duty));s("smhMPF",money(mpf));
+  s("smhTag",total+" shipments");
+  renderBars("smhPortBars",objTop(ports,8));
+  s("chbReleased",fmt(released));s("chbPending",fmt(pending));
+  s("dRL",released.toLocaleString());s("dPL",pending.toLocaleString());
+  renderDonut(released,pending,total);
+
+  if(kpi&&!activeFilter){
+    s("ctnTotal",fmt(kpi.container_total));
+    s("ctnCBM",num(kpi.container_total_cbm,0)+" CBM");
+    s("ctnWeight",num(kpi.container_total_weight_lbs,0)+" lbs");
+    s("ctnPieces",fmt(kpi.container_total_pieces));
+    s("ctnTag",(kpi.container_total||"\u2014")+" container file rows");
+    var ct=pTopN(kpi.container_types);
+    s("ctnTypes",ct.map(function(i){return i.label+"("+i.count+")";}).join(" \u00b7 ")||"\u2014");
+    renderChips("ctnStatuses",pTopN(kpi.container_statuses));
+    renderBars("ctnContents",pTopN(kpi.container_top_contents));
+    s("chbTotal",fmt(kpi.chb_total_entries));
+    s("chbAvgDuty",num(kpi.chb_avg_duty_rate,1)+"%");
+    s("chbDutyBig",money(kpi.chb_total_duty));
+    s("chbLiqDuty",money(kpi.chb_liquidated_duty));
+    s("chbTag",(kpi.chb_total_entries||"\u2014")+" CHB file rows");
+    renderBars("chbCountryBars",pTopN(kpi.chb_top_countries));
+  } else {
+    s("ctnTotal","\u223C"+fmt(total)+" ships");s("ctnCBM","\u2014");s("ctnWeight","\u2014");
+    s("ctnPieces","\u2014");s("ctnTag","filtered");s("ctnTypes","\u2014");
+    s("chbTotal","\u223C"+fmt(total)+" ships");s("chbAvgDuty","\u2014");
+    s("chbDutyBig",money(duty));s("chbLiqDuty","\u2014");s("chbTag","filtered");
+  }
+  window._activeRows=rows;
 }
 
-// SHIP ROW
-function shipRow(s,cols,isToday){
-  var rc=isToday?"release-today":"";
-  var isfBill  =s["ISF BILL MATCH DATE"]   ?'<span class="isf-match">'+s["ISF BILL MATCH DATE"]+'</span>':'<span style="color:var(--muted)">—</span>';
-  var isfNoBill=s["ISF NO BILL MATCH DATE"]?'<span class="isf-nomatch">'+s["ISF NO BILL MATCH DATE"]+'</span>':'<span style="color:var(--muted)">—</span>';
-  var duty=s["DUTY BILLED"]?"$"+parseFloat(s["DUTY BILLED"]).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}):"—";
-  var cells=[
-    '<td><span class="ref-link" onclick=\'openModal("'+esc(s["REFERENCE NO"])+'")\'>'+( s["REFERENCE NO"]||"—")+'</span></td>',
-    '<td class="mono">'+(s["ENTRY NUMBER"]||"—")+'</td>',
-    '<td style="font-weight:500">'+(s["IMPORTER NAME"]||"—")+'</td>',
-    '<td style="color:var(--muted)">'+(s["SHIPPER NAME"]||"—")+'</td>',
-  ];
-  if(!isToday)cells.push('<td class="mono">'+(s["ETA DATE"]||"—")+'</td>');
-  if(!isToday)cells.push('<td class="mono">'+(s["ACTUAL ARRIVAL DATE"]||"—")+'</td>');
-  cells=cells.concat([
-    '<td class="mono '+rc+'">'+(s["CHB CARGO RELEASE DATE"]||"—")+'</td>',
-    '<td style="color:var(--muted);font-size:11px">'+(s["CHB PORT OF DCHG NAME"]||"—")+'</td>',
-    '<td class="mono">'+isfBill+'</td>',
-    '<td class="mono">'+isfNoBill+'</td>',
-    '<td style="color:var(--muted);font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis">'+(s["CONTAINER NUMBERS"]||"—")+'</td>',
-    '<td class="mono">'+duty+'</td>',
-  ]);
-  return '<tr>'+cells.join("")+'</tr>';
+// ── CARGO RELEASES ─────────────────────────────────────
+function setToday(){document.getElementById("relDate").value=todayStr();}
+function shiftDate(d){
+  var dt=new Date(document.getElementById("relDate").value+"T00:00:00");
+  dt.setDate(dt.getDate()+d);
+  document.getElementById("relDate").value=dt.getFullYear()+"-"+pad(dt.getMonth()+1)+"-"+pad(dt.getDate());
+  renderReleases();
+}
+function renderReleases(){
+  var dt=document.getElementById("relDate").value||todayStr();
+  var rows=allShipments.filter(function(s){return nd(s["CHB CARGO RELEASE DATE"])===dt;});
+  document.getElementById("relCount").textContent=rows.length;
+  document.getElementById("sbRelCount").textContent=rows.length;
+  var tb=document.getElementById("relBody");
+  if(!rows.length){tb.innerHTML='<tr><td colspan="11" class="nd">No cargo releases for '+dt+'</td></tr>';return;}
+  tb.innerHTML=rows.map(function(r){return tRowCompact(r,true);}).join("");
 }
 
-// MODAL
-function openModal(refNo){
-  var s=allShipments.filter(function(x){return x["REFERENCE NO"]===refNo;})[0];
+// ── B/L SEARCH ─────────────────────────────────────────
+function doSearch(){
+  var q=document.getElementById("blInput").value.trim().toUpperCase();
+  if(!q)return;
+  var res=allShipments.filter(function(s){
+    return(s["MANIFEST HOUSE B/L NUMBER"]||"").toUpperCase().indexOf(q)!==-1||(s["BL NUMBER MASTER"]||"").toUpperCase().indexOf(q)!==-1;
+  });
+  document.getElementById("blResults").style.display="";
+  var tb=document.getElementById("blBody");
+  if(!res.length){tb.innerHTML='<tr><td colspan="12" class="nd">No results for "'+q+'"</td></tr>';return;}
+  tb.innerHTML=res.map(function(r){return tRowFull(r);}).join("");
+}
+
+// ── KPI DRILL-IN ───────────────────────────────────────
+function drillKPI(type,label){
+  var rows=window._activeRows||allShipments;
+  var nm=new Date().getMonth(),ny=new Date().getFullYear();
+  var subset;
+  if(type==="all")      subset=rows;
+  if(type==="month")    subset=rows.filter(function(r){var d=r["DATE OPENED"]?new Date(r["DATE OPENED"]):null;return d&&d.getMonth()===nm&&d.getFullYear()===ny;});
+  if(type==="importers")subset=rows;
+  if(type==="released") subset=rows.filter(function(r){return(r["CHB CARGO RELEASE DATE"]||"").replace(/[\s\/]/g,"").length>2;});
+  if(type==="pending")  subset=rows.filter(function(r){return(r["CHB CARGO RELEASE DATE"]||"").replace(/[\s\/]/g,"").length<=2;});
+  document.getElementById("drillT").textContent=label;
+  document.getElementById("drillInfo").textContent=subset.length.toLocaleString()+" shipments from SMH26 master (deduplicated)"+(subset.length>200?" \u00b7 showing first 200":"");
+  var tb=document.getElementById("drillBody");
+  if(!subset.length){tb.innerHTML='<tr><td colspan="8" class="nd">No shipments</td></tr>';}
+  else{
+    tb.innerHTML=subset.slice(0,200).map(function(r){
+      var d=r["DUTY BILLED"]?"$"+parseFloat(r["DUTY BILLED"]).toLocaleString(undefined,{minimumFractionDigits:2}):"—";
+      return'<tr>'+
+        '<td><span class="rl" onclick=\'drillToDetail("'+esc(r["REFERENCE NO"])+'")\'>'+( r["REFERENCE NO"]||"—")+'</span></td>'+
+        '<td class="mn">'+(r["ENTRY NUMBER"]||"—")+'</td>'+
+        '<td>'+(r["IMPORTER NAME"]||"—")+'</td>'+
+        '<td style="color:var(--muted)">'+(r["SHIPPER NAME"]||"—")+'</td>'+
+        '<td class="mn">'+(r["ETA DATE"]||"—")+'</td>'+
+        '<td class="mn">'+(r["CHB CARGO RELEASE DATE"]||"—")+'</td>'+
+        '<td style="font-size:11px;color:var(--muted)">'+(r["CHB PORT OF DCHG NAME"]||"—")+'</td>'+
+        '<td class="mn">'+d+'</td>'+
+        '</tr>';
+    }).join("");
+  }
+  document.getElementById("drillOv").classList.add("open");
+}
+function drillToDetail(ref){closeDrillD();setTimeout(function(){openDet(ref);},150);}
+
+// ── SHIPMENT DETAIL ────────────────────────────────────
+function openDet(ref){
+  var s=allShipments.filter(function(x){return x["REFERENCE NO"]===ref;})[0];
   if(!s)return;
-  document.getElementById("modalTitle").textContent="Ref: "+refNo;
-  document.getElementById("modalSub").textContent=(s["IMPORTER NAME"]||"")+" · "+(s["ENTRY NUMBER"]||"")+" · "+(s["CHB PORT OF DCHG NAME"]||"");
-  function f(label,value,cls){return'<div class="mf"><div class="mf-label">'+label+'</div><div class="mf-value '+(cls||"")+'">'+( value||"—")+'</div></div>';}
-  document.getElementById("modalOverview").innerHTML=
+  document.getElementById("detT").textContent="Ref: "+ref;
+  document.getElementById("detS").textContent=(s["IMPORTER NAME"]||"")+"\u00b7"+(s["ENTRY NUMBER"]||"")+"\u00b7"+(s["CHB PORT OF DCHG NAME"]||"");
+  function f(l,v,c){return'<div class="mf"><div class="mfl">'+l+'</div><div class="mfv '+(c||"")+'">'+( v||"\u2014")+'</div></div>';}
+  document.getElementById("detO").innerHTML=
     f("Reference No",s["REFERENCE NO"],"hi")+f("Entry Number",s["ENTRY NUMBER"],"hi")+f("Entry Type",s["ENTRY TYPE"])+
-    f("Importer",s["IMPORTER NAME"])+f("Shipper",s["SHIPPER NAME"])+f("Discharge Port",s["CHB PORT OF DCHG NAME"])+
+    f("Importer",s["IMPORTER NAME"])+f("Shipper",s["SHIPPER NAME"])+f("Port of Discharge",s["CHB PORT OF DCHG NAME"])+
     f("Master B/L",s["BL NUMBER MASTER"])+f("House B/L",s["MANIFEST HOUSE B/L NUMBER"])+f("Port Code",s["ENTRY PORT CODE"]);
-  document.getElementById("modalDates").innerHTML=
+  document.getElementById("detD").innerHTML=
     f("ETA Date",s["ETA DATE"],"hi")+f("Actual Arrival",s["ACTUAL ARRIVAL DATE"])+f("Est. Arrival",s["ESTIMATED ARRIVAL DATE"])+
     f("Cargo Release",s["CHB CARGO RELEASE DATE"],s["CHB CARGO RELEASE DATE"]?"good":"")+
     f("ISF Bill Match",s["ISF BILL MATCH DATE"],s["ISF BILL MATCH DATE"]?"good":"")+
     f("ISF No Bill Match",s["ISF NO BILL MATCH DATE"],s["ISF NO BILL MATCH DATE"]?"warn":"");
-  document.getElementById("modalCargo").innerHTML=
+  document.getElementById("detC").innerHTML=
     f("Container Numbers",s["CONTAINER NUMBERS"])+f("Container Types",s["CONTAINER TYPES"])+
     f("Total CBM",s["TOTAL CBM"]?s["TOTAL CBM"]+" CBM":"")+
     f("Total Weight",s["TOTAL WEIGHT LBS"]?parseFloat(s["TOTAL WEIGHT LBS"]).toLocaleString()+" lbs":"")+
-    f("Country of Origin",s["COUNTRY OF ORIGIN"])+f("HTS Descriptions",s["HTS DESCRIPTIONS"]);
-  document.getElementById("modalCHB").innerHTML=
+    f("Country of Origin",s["COUNTRY OF ORIGIN"])+f("HTS",s["HTS DESCRIPTIONS"]);
+  document.getElementById("detH").innerHTML=
     f("Duty Billed",s["DUTY BILLED"]?"$"+parseFloat(s["DUTY BILLED"]).toLocaleString(undefined,{minimumFractionDigits:2}):"")+
     f("CHB Duty",s["CHB DUTY"]?"$"+parseFloat(s["CHB DUTY"]).toLocaleString(undefined,{minimumFractionDigits:2}):"")+
     f("Total MPF",s["TOTAL MPF"]?"$"+parseFloat(s["TOTAL MPF"]).toLocaleString(undefined,{minimumFractionDigits:2}):"")+
     f("Total HMF",s["TOTAL HMF"]?"$"+parseFloat(s["TOTAL HMF"]).toLocaleString(undefined,{minimumFractionDigits:2}):"");
-  document.getElementById("modalOverlay").classList.add("open");
+  document.getElementById("detailOv").classList.add("open");
 }
-function closeModal(e){if(e.target===document.getElementById("modalOverlay"))closeModalDirect();}
-function closeModalDirect(){document.getElementById("modalOverlay").classList.remove("open");}
+function closeDet(e){if(e.target===document.getElementById("detailOv"))closeDetD();}
+function closeDetD(){document.getElementById("detailOv").classList.remove("open");}
+function closeDrill(e){if(e.target===document.getElementById("drillOv"))closeDrillD();}
+function closeDrillD(){document.getElementById("drillOv").classList.remove("open");}
 
-// DONUT
-function renderDonut(released,pending,total){
-  if(!total)return;
-  var circ=2*Math.PI*35;
-  var rd=(released/total)*circ, pd=(pending/total)*circ;
-  document.getElementById("donutReleased").setAttribute("stroke-dasharray",rd+" "+circ);
-  document.getElementById("donutReleased").setAttribute("stroke-dashoffset",circ/4);
-  document.getElementById("donutPending").setAttribute("stroke-dasharray",pd+" "+circ);
-  document.getElementById("donutPending").setAttribute("stroke-dashoffset",(circ/4)-rd);
+// ── MAP ───────────────────────────────────────────────
+var PORT_COORDS={"NEW YORK/NEWARK AREA":[40.684,-74.175],"LOS ANGELES, CA":[33.740,-118.262],"NEW YORK, NY":[40.713,-74.006],"JFK AIRPORT":[40.641,-73.778],"SAVANNAH, GA":[32.084,-81.100],"BUFFALO-NIAGARA FALLS":[42.886,-78.878],"LONG BEACH, CA":[33.770,-118.194],"PT OF NORFOLK-NWPT NWS":[36.946,-76.315],"LOS ANGELES INT AIRPORT":[33.943,-118.408],"HOUSTON, TX":[29.760,-95.370],"CHARLESTON, SC":[32.777,-79.931],"BOSTON, MA":[42.360,-71.059],"CHICAGO, IL":[41.878,-87.630],"SEATTLE, WA":[47.606,-122.332],"METROPOLITAN OAKLAND INT":[37.721,-122.221],"SAN FRANCISCO INTL AIRPO":[37.621,-122.379],"DALLAS/FT WORTH TX":[32.900,-97.040],"ATLANTA INTL AIRPORT (AT":[33.641,-84.428],"CLEVELAND, OH":[41.499,-81.694],"ST. LOUIS, MO":[38.627,-90.199]};
+var CTRY_COORDS={"CN-CHINA(MAINLAND)":[35.862,104.195],"IN-INDIA":[20.594,78.963],"TW-TAIWAN":[23.698,120.961],"ID-INDONESIA":[-0.789,113.921],"NP-NEPAL":[28.395,84.124],"FR-FRANCE":[46.228,2.214],"IT-ITALY":[41.872,12.567],"VN-VIETNAM":[14.058,108.277],"TR-TURKIYE":[38.964,35.243],"TH-THAILAND":[15.870,100.993],"BD-BANGLADESH":[23.685,90.356],"MY-MALAYSIA":[4.211,101.976],"DE-GERMANY, FED. REPUBLIC":[51.166,10.452],"RO-ROMANIA":[45.943,24.967],"AU-AUSTRALIA":[-25.274,133.775],"PE-PERU":[-9.190,-75.015],"IL-ISRAEL":[31.046,34.852],"ES-SPAIN":[40.464,-3.749],"NL-NETHERLANDS":[52.133,5.291],"XO-ONTARIO":[51.254,-85.323]};
+var mapSvg,mapZoom,mapG,mapProj,mapPF;
+
+function initMap(){
+  var el=document.getElementById("mapContainer"),w=el.offsetWidth||900,h=420;
+  mapProj=d3.geoNaturalEarth1().scale(w/6.5).translate([w/2,h/2]);
+  mapPF=d3.geoPath().projection(mapProj);
+  mapSvg=d3.select("#mapSvg").attr("viewBox","0 0 "+w+" "+h);
+  mapG=mapSvg.append("g");
+  mapG.append("rect").attr("width",w).attr("height",h).attr("fill","#cfe8f5");
+  mapZoom=d3.zoom().scaleExtent([0.8,14]).on("zoom",function(ev){mapG.attr("transform",ev.transform);});
+  mapSvg.call(mapZoom);
+  document.getElementById("mapContainer").addEventListener("wheel",function(e){
+    e.preventDefault();
+    mapSvg.transition().duration(180).call(mapZoom.scaleBy,e.deltaY<0?1.18:0.85);
+  },{passive:false});
+  fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+    .then(function(r){return r.json();})
+    .then(function(world){
+      var c=topojson.feature(world,world.objects.countries);
+      mapG.append("g").selectAll("path").data(c.features).enter().append("path").attr("d",mapPF).attr("fill","#e8f0e9").attr("stroke","#c5d5c6").attr("stroke-width",0.4);
+      mapG.append("path").datum(d3.geoGraticule()()).attr("d",mapPF).attr("fill","none").attr("stroke","rgba(100,150,180,.1)").attr("stroke-width",.5);
+      drawMapPoints({},{});
+    }).catch(function(){drawMapPoints({},{});});
+}
+function zoomMap(f){mapSvg.transition().duration(280).call(mapZoom.scaleBy,f);}
+function resetZoom(){mapSvg.transition().duration(380).call(mapZoom.transform,d3.zoomIdentity);}
+function updateMapData(kpi){
+  var pc={},oc={};
+  pTopN(kpi.smh26_top_ports||"").forEach(function(p){pc[p.label]=p.count;});
+  pTopN(kpi.chb_top_countries||"").forEach(function(c){oc[c.label]=c.count;});
+  drawMapPoints(pc,oc);
+}
+function drawMapPoints(pc,oc){
+  var tip=document.getElementById("mapTip");
+  mapG.selectAll(".dyn").remove();
+  var mxP=Math.max.apply(null,Object.values(pc).concat([1]));
+  var mxC=Math.max.apply(null,Object.values(oc).concat([1]));
+  // Arcs
+  Object.keys(oc).slice(0,6).forEach(function(c){
+    var cc=CTRY_COORDS[c];if(!cc)return;
+    var src=mapProj([cc[1],cc[0]]);if(!src)return;
+    Object.keys(pc).slice(0,3).forEach(function(p){
+      var pp=PORT_COORDS[p];if(!pp)return;
+      var dst=mapProj([pp[1],pp[0]]);if(!dst)return;
+      var mx=(src[0]+dst[0])/2,my=Math.min(src[1],dst[1])-48;
+      mapG.append("path").attr("class","dyn").attr("d","M"+src[0]+","+src[1]+" Q"+mx+","+my+" "+dst[0]+","+dst[1]).attr("fill","none").attr("stroke","rgba(255,193,7,.28)").attr("stroke-width",.7).attr("stroke-dasharray","4,3");
+    });
+  });
+  // Country bubbles
+  Object.keys(CTRY_COORDS).forEach(function(c){
+    var cc=CTRY_COORDS[c];var pt=mapProj([cc[1],cc[0]]);if(!pt)return;
+    var cnt=oc[c]||0,r=cnt>0?4+(cnt/mxC)*14:4;
+    mapG.append("circle").attr("class","dyn").attr("cx",pt[0]).attr("cy",pt[1]).attr("r",r)
+      .attr("fill",cnt>0?"rgba(255,112,67,.35)":"rgba(255,112,67,.15)").attr("stroke","#ff7043").attr("stroke-width",1.2)
+      .style("cursor","pointer")
+      .on("mouseover",function(ev){tip.style.opacity="1";tip.innerHTML="<strong>"+c+"</strong><small>"+(cnt?cnt+" CHB entries":"")+"</small>";posT(tip,ev);})
+      .on("mouseout",function(){tip.style.opacity="0";})
+      .on("click",function(){showMapModal("origin",c,cnt);});
+  });
+  // Port bubbles
+  Object.keys(PORT_COORDS).forEach(function(p){
+    var pp=PORT_COORDS[p];var pt=mapProj([pp[1],pp[0]]);if(!pt)return;
+    var cnt=pc[p]||0,r=cnt>0?6+(cnt/mxP)*20:5;
+    mapG.append("circle").attr("class","dyn").attr("cx",pt[0]).attr("cy",pt[1]).attr("r",r)
+      .attr("fill",cnt>0?"rgba(21,101,192,.3)":"rgba(21,101,192,.12)").attr("stroke","#1565c0").attr("stroke-width",1.5)
+      .style("cursor","pointer")
+      .on("mouseover",function(ev){tip.style.opacity="1";tip.innerHTML="<strong>"+p+"</strong><small>"+(cnt?cnt+" shipments":"Port of Discharge")+"</small>";posT(tip,ev);})
+      .on("mouseout",function(){tip.style.opacity="0";})
+      .on("click",function(){showMapModal("port",p,cnt);});
+  });
+}
+function posT(tip,ev){
+  var r=document.getElementById("mapContainer").getBoundingClientRect();
+  tip.style.left=(ev.clientX-r.left+14)+"px";tip.style.top=(ev.clientY-r.top-10)+"px";
+}
+function showMapModal(type,name,count){
+  var rows;
+  if(type==="port"){
+    rows=allShipments.filter(function(s){return(s["CHB PORT OF DCHG NAME"]||"").trim().toUpperCase()===name.trim().toUpperCase();});
+    document.getElementById("mapMIcon").textContent="\uD83D\uDD35";
+    document.getElementById("mapMT").textContent="Port: "+name;
+    document.getElementById("mapMS").textContent="US Port of Discharge \u00b7 "+rows.length+" shipments from SMH26";
+  } else {
+    var prefix=name.substring(0,8).toUpperCase();
+    rows=allShipments.filter(function(s){return(s["COUNTRY OF ORIGIN"]||"").toUpperCase().indexOf(prefix)!==-1;});
+    document.getElementById("mapMIcon").textContent="\uD83D\uDD34";
+    document.getElementById("mapMT").textContent="Origin: "+name;
+    document.getElementById("mapMS").textContent="Country of Origin \u00b7 "+rows.length+" shipments from SMH26";
+  }
+  document.getElementById("mapMInfo").textContent=rows.length+" SMH26 shipments"+(rows.length>150?" \u00b7 showing first 150":"")+" \u00b7 click Ref No for full detail";
+  var tb=document.getElementById("mapMBody");
+  if(!rows.length){tb.innerHTML='<tr><td colspan="9" class="nd">No matching shipments</td></tr>';}
+  else{
+    tb.innerHTML=rows.slice(0,150).map(function(r){
+      var d=r["DUTY BILLED"]?"$"+parseFloat(r["DUTY BILLED"]).toLocaleString(undefined,{minimumFractionDigits:2}):"—";
+      return'<tr>'+
+        '<td><span class="rl" onclick=\'mapToDetail("'+esc(r["REFERENCE NO"])+'")\'>'+(r["REFERENCE NO"]||"—")+'</span></td>'+
+        '<td class="mn">'+(r["ENTRY NUMBER"]||"—")+'</td>'+
+        '<td>'+(r["IMPORTER NAME"]||"—")+'</td>'+
+        '<td style="color:var(--muted)">'+(r["SHIPPER NAME"]||"—")+'</td>'+
+        '<td class="mn">'+(r["ETA DATE"]||"—")+'</td>'+
+        '<td class="mn">'+(r["CHB CARGO RELEASE DATE"]||"—")+'</td>'+
+        '<td style="font-size:11px;color:var(--muted)">'+(r["CHB PORT OF DCHG NAME"]||"—")+'</td>'+
+        '<td style="font-size:11px;color:var(--muted)">'+(r["CONTAINER NUMBERS"]||"—")+'</td>'+
+        '<td class="mn">'+d+'</td>'+
+        '</tr>';
+    }).join("");
+  }
+  document.getElementById("mapOv").classList.add("open");
+}
+function closeMapM(e){if(e.target===document.getElementById("mapOv"))closeMapMD();}
+function closeMapMD(){document.getElementById("mapOv").classList.remove("open");}
+function mapToDetail(ref){closeMapMD();setTimeout(function(){openDet(ref);},150);}
+
+// ── TABLE ROWS ─────────────────────────────────────────
+function tRowCompact(r,isRel){
+  var rc=isRel?"rel":"";
+  var isfB=r["ISF BILL MATCH DATE"]?'<span class="isfy">\u2713 '+r["ISF BILL MATCH DATE"]+'</span>':'<span class="isfn">\u2014</span>';
+  var isfN=r["ISF NO BILL MATCH DATE"]?'<span class="isfy">\u2713 '+r["ISF NO BILL MATCH DATE"]+'</span>':'<span class="isfn">\u2014</span>';
+  var d=r["DUTY BILLED"]?"$"+parseFloat(r["DUTY BILLED"]).toLocaleString(undefined,{minimumFractionDigits:2}):"—";
+  return'<tr>'+
+    '<td><span class="rl" onclick=\'openDet("'+esc(r["REFERENCE NO"])+'")\'>'+( r["REFERENCE NO"]||"—")+'</span></td>'+
+    '<td class="mn">'+(r["ENTRY NUMBER"]||"—")+'</td>'+
+    '<td style="font-weight:500">'+(r["IMPORTER NAME"]||"—")+'</td>'+
+    '<td style="color:var(--muted)">'+(r["SHIPPER NAME"]||"—")+'</td>'+
+    '<td class="mn '+rc+'">'+(r["CHB CARGO RELEASE DATE"]||"—")+'</td>'+
+    '<td class="mn">'+(r["ETA DATE"]||"—")+'</td>'+
+    '<td style="color:var(--muted);font-size:11px">'+(r["CHB PORT OF DCHG NAME"]||"—")+'</td>'+
+    '<td class="mn">'+isfB+'</td>'+
+    '<td class="mn">'+isfN+'</td>'+
+    '<td style="color:var(--muted);font-size:11px">'+(r["CONTAINER NUMBERS"]||"—")+'</td>'+
+    '<td class="mn">'+d+'</td>'+
+    '</tr>';
+}
+function tRowFull(r){
+  var isfB=r["ISF BILL MATCH DATE"]?'<span class="isfy">\u2713 '+r["ISF BILL MATCH DATE"]+'</span>':'<span class="isfn">\u2014</span>';
+  var isfN=r["ISF NO BILL MATCH DATE"]?'<span class="isfy">\u2713 '+r["ISF NO BILL MATCH DATE"]+'</span>':'<span class="isfn">\u2014</span>';
+  var d=r["DUTY BILLED"]?"$"+parseFloat(r["DUTY BILLED"]).toLocaleString(undefined,{minimumFractionDigits:2}):"—";
+  return'<tr>'+
+    '<td><span class="rl" onclick=\'openDet("'+esc(r["REFERENCE NO"])+'")\'>'+( r["REFERENCE NO"]||"—")+'</span></td>'+
+    '<td class="mn">'+(r["ENTRY NUMBER"]||"—")+'</td>'+
+    '<td>'+(r["IMPORTER NAME"]||"—")+'</td>'+
+    '<td style="color:var(--muted)">'+(r["SHIPPER NAME"]||"—")+'</td>'+
+    '<td class="mn">'+(r["ETA DATE"]||"—")+'</td>'+
+    '<td class="mn">'+(r["ACTUAL ARRIVAL DATE"]||"—")+'</td>'+
+    '<td class="mn">'+(r["CHB CARGO RELEASE DATE"]||"—")+'</td>'+
+    '<td style="font-size:11px;color:var(--muted)">'+(r["CHB PORT OF DCHG NAME"]||"—")+'</td>'+
+    '<td class="mn">'+isfB+'</td>'+
+    '<td class="mn">'+isfN+'</td>'+
+    '<td style="font-size:11px;color:var(--muted)">'+(r["CONTAINER NUMBERS"]||"—")+'</td>'+
+    '<td class="mn">'+d+'</td>'+
+    '</tr>';
 }
 
-// BAR LIST
-function renderBars(id,str){
+// ── DONUT / BARS / CHIPS ───────────────────────────────
+function renderDonut(r,p,t){
+  if(!t)return;
+  var c=2*Math.PI*35,rd=(r/t)*c,pd=(p/t)*c;
+  document.getElementById("donutR").setAttribute("stroke-dasharray",rd+" "+c);
+  document.getElementById("donutR").setAttribute("stroke-dashoffset",c/4);
+  document.getElementById("donutP").setAttribute("stroke-dasharray",pd+" "+c);
+  document.getElementById("donutP").setAttribute("stroke-dashoffset",(c/4)-rd);
+}
+function renderBars(id,items){
   var el=document.getElementById(id);if(!el)return;
-  var items=parseTopN(str);
-  if(!items.length){el.innerHTML='<li style="color:var(--muted);font-size:11px">No data yet</li>';return;}
-  var max=items[0].count;
-  el.innerHTML=items.map(function(item){
-    var pct=max>0?(item.count/max*100).toFixed(0):0;
-    return'<li><span class="bar-label" title="'+item.label+'">'+item.label+'</span><span class="bar-track"><span class="bar-fill" style="width:'+pct+'%"></span></span><span class="bar-count">'+item.count+'</span></li>';
-  }).join("");
+  if(!items||!items.length){el.innerHTML='<li style="color:var(--muted);font-size:11px">No data</li>';return;}
+  var mx=items[0].count||1;
+  el.innerHTML=items.map(function(i){var p=(i.count/mx*100).toFixed(0);return'<li><span class="bar-label" title="'+i.label+'">'+i.label+'</span><span class="bar-track"><span class="bar-fill" style="width:'+p+'%"></span></span><span class="bar-count">'+i.count+'</span></li>';}).join("");
 }
-
-// CHIPS
 function renderChips(id,items){
   var el=document.getElementById(id);if(!el)return;
-  var colors=["blue","green","orange","teal","red"];
+  var c=["blue","green","orange","teal","red"];
   if(!items.length){el.innerHTML='<span class="chip blue">No data</span>';return;}
-  el.innerHTML=items.map(function(item,i){return'<span class="chip '+colors[i%colors.length]+'">'+item.label+' · '+item.count+'</span>';}).join("");
+  el.innerHTML=items.map(function(i,x){return'<span class="chip '+c[x%c.length]+'">'+i.label+' \u00b7 '+i.count+'</span>';}).join("");
 }
 
-// HELPERS
-function parseTopN(str){
-  if(!str)return[];
-  return str.toString().split("|").filter(Boolean).map(function(s){var p=s.split(":");var c=parseInt(p.pop())||0;return{label:p.join(":").trim(),count:c};}).filter(function(i){return i.label;});
-}
-function set(id,val){var el=document.getElementById(id);if(el)el.textContent=val!==undefined&&val!==null?val:"—";}
-function fmt(v){return v!==undefined&&v!==null&&v!==""?parseInt(v).toLocaleString():"—";}
-function num(v,dec){var n=parseFloat(v);return isNaN(n)?"—":n.toLocaleString(undefined,{minimumFractionDigits:dec,maximumFractionDigits:dec});}
-function money(v){var n=parseFloat(v);return isNaN(n)||n===0?"$0":"$"+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+// ── PANEL PREFS ────────────────────────────────────────
+var SK="lvp2";
+var AP=["smh26_total","smh26_month","smh26_importers","smh26_duty","smh26_mpf","smh26_ports","ctn_total","ctn_cbm","ctn_weight","ctn_pieces","ctn_types","ctn_statuses","ctn_contents","chb_total","chb_released","chb_pending","chb_avgduty","chb_duty","chb_countries","chb_donut"];
+function toggleDrawer(){document.getElementById("drawer").classList.toggle("open");document.getElementById("dOverlay").classList.toggle("open");}
+function loadPanelPrefs(){var s=localStorage.getItem(SK);var p=s?JSON.parse(s):null;if(!p){p={};AP.forEach(function(x){p[x]=true;});}AP.forEach(function(panel){var on=p[panel]!==false;applyPanel(panel,on);var cb=document.querySelector('input[data-panel="'+panel+'"]');if(cb)cb.checked=on;});}
+function togglePanel(cb){var pn=cb.getAttribute("data-panel");var on=cb.checked;applyPanel(pn,on);var s=localStorage.getItem(SK);var p=s?JSON.parse(s):{};p[pn]=on;localStorage.setItem(SK,JSON.stringify(p));}
+function applyPanel(pn,on){document.querySelectorAll('[data-panel="'+pn+'"]').forEach(function(el){el.classList.toggle("hidden",!on);});}
+function resetPanels(){localStorage.removeItem(SK);loadPanelPrefs();}
+
+// ── HELPERS ────────────────────────────────────────────
+function pTopN(str){if(!str)return[];return str.toString().split("|").filter(Boolean).map(function(s){var p=s.split(":");var c=parseInt(p.pop())||0;return{label:p.join(":").trim(),count:c};}).filter(function(i){return i.label;});}
+function objTop(obj,n){return Object.keys(obj).sort(function(a,b){return obj[b]-obj[a];}).slice(0,n).map(function(k){return{label:k,count:obj[k]};});}
+function s(id,val){var el=document.getElementById(id);if(el)el.textContent=(val!==undefined&&val!==null)?val:"\u2014";}
+function fmt(v){return(v!==undefined&&v!==null&&v!=="")?parseInt(v).toLocaleString():"\u2014";}
+function num(v,dec){var n=parseFloat(v);return isNaN(n)?"\u2014":n.toLocaleString(undefined,{minimumFractionDigits:dec,maximumFractionDigits:dec});}
+function money(v){var n=parseFloat(v);return(isNaN(n)||n===0)?"$0":"$"+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
 function setStatus(state,text){document.getElementById("statusPill").className="status-pill "+(state==="active"?"":state);document.getElementById("statusText").textContent=text;}
 function todayStr(){var d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
-function normalizeDate(str){if(!str)return"";str=str.trim();var m=str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return m[3]+"-"+pad(m[1])+"-"+pad(m[2]);if(str.match(/^\d{4}-\d{2}-\d{2}/))return str.substring(0,10);return str;}
+function nd(str){if(!str)return"";str=str.trim();var m=str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return m[3]+"-"+pad(m[1])+"-"+pad(m[2]);if(str.match(/^\d{4}-\d{2}-\d{2}/))return str.substring(0,10);return str;}
 function pad(n){return n<10?"0"+n:""+n;}
 function esc(s){return(s||"").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
-
-// PANEL PREFS
-var STORAGE_KEY="logisticsPanelPrefs";
-var ALL_PANELS=["smh26_total","smh26_month","smh26_importers","smh26_duty","smh26_mpf","smh26_ports","ctn_total","ctn_cbm","ctn_weight","ctn_pieces","ctn_types","ctn_statuses","ctn_contents","chb_total","chb_released","chb_pending","chb_avgduty","chb_duty","chb_countries","chb_release_donut"];
-function toggleDrawer(){document.getElementById("drawer").classList.toggle("open");document.getElementById("drawerOverlay").classList.toggle("open");}
-function loadPanelPrefs(){var saved=localStorage.getItem(STORAGE_KEY);var prefs=saved?JSON.parse(saved):null;if(!prefs){prefs={};ALL_PANELS.forEach(function(p){prefs[p]=true;});}ALL_PANELS.forEach(function(panel){var isOn=prefs[panel]!==false;applyPanel(panel,isOn);var cb=document.querySelector('input[data-panel="'+panel+'"]');if(cb)cb.checked=isOn;});}
-function togglePanel(cb){var panel=cb.getAttribute("data-panel");var isOn=cb.checked;applyPanel(panel,isOn);var saved=localStorage.getItem(STORAGE_KEY);var prefs=saved?JSON.parse(saved):{};prefs[panel]=isOn;localStorage.setItem(STORAGE_KEY,JSON.stringify(prefs));}
-function applyPanel(panel,isOn){document.querySelectorAll('[data-panel="'+panel+'"]').forEach(function(el){el.classList.toggle("hidden",!isOn);});}
-function resetPanels(){localStorage.removeItem(STORAGE_KEY);loadPanelPrefs();}
-loadPanelPrefs();
 </script>
 </body>
 </html>
