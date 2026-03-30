@@ -139,7 +139,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .cal-nav button:hover{background:var(--bg2)}
 .rel-badge{display:inline-flex;align-items:center;gap:6px;background:#e8f5e9;border:1px solid #a5d6a7;color:var(--green);padding:3px 11px;border-radius:100px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600}
 
-.search-bar{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.chip-sm{display:inline-block;padding:2px 7px;border-radius:100px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;border:1px solid;}
+.chip-g{background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7;}
+.chip-b{background:#e3f2fd;color:#1565c0;border-color:#90caf9;}
+.chip-o{background:#fff3e0;color:#e65100;border-color:#ffcc80;}
 .search-bar input{flex:1;background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:9px 15px;border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;transition:border-color .2s;box-shadow:var(--shadow)}
 .search-bar input:focus{border-color:var(--ocean)}
 .search-bar button{padding:9px 20px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s}
@@ -234,6 +237,8 @@ footer{text-align:center;padding:18px;font-family:'IBM Plex Mono',monospace;font
   <a class="nav-item active" href="#map-sec"><span class="nav-icon">&#x1F5FA;</span> Global Map</a>
   <a class="nav-item" href="#rel-sec"><span class="nav-icon">&#x1F4EC;</span> Cargo Releases <span class="nav-badge" id="sbRelCount">0</span></a>
   <a class="nav-item" href="#bl-sec"><span class="nav-icon">&#x1F50D;</span> B/L Search</a>
+  <a class="nav-item" href="#ctn-search-sec"><span class="nav-icon">&#x1F4E6;</span> Container Search</a>
+  <a class="nav-item" href="#ctn-search-sec"><span class="nav-icon">&#x1F4E6;</span> Container Search</a>
   <div class="sb-label">KPI Panels</div>
   <a class="nav-item" href="#smh-sec"><span class="nav-icon">&#x1F6A2;</span> Shipments</a>
   <a class="nav-item" href="#ctn-sec"><span class="nav-icon">&#x1F4E6;</span> Containers</a>
@@ -312,6 +317,36 @@ footer{text-align:center;padding:18px;font-family:'IBM Plex Mono',monospace;font
     </div>
   </div>
 
+  <!-- CONTAINER # SEARCH -->
+  <div class="sec-title" id="ctn-search-sec">&#x1F4E6; Search by Container Number</div>
+  <div class="search-bar">
+    <input type="text" id="ctnSearchInput" placeholder="Enter Container Number (e.g. CAIU4265329)" onkeydown="if(event.key==='Enter')searchContainer()">
+    <button onclick="searchContainer()">Search</button>
+  </div>
+  <div id="ctnSearchResults" style="display:none;margin-bottom:24px">
+    <div class="tbl-wrap">
+      <table class="stbl">
+        <thead><tr><th>Container #</th><th>Ref No</th><th>Entry No</th><th>Importer</th><th>Content</th><th>Type</th><th>CBM</th><th>Pieces</th><th>Weight (lbs)</th><th>Status</th><th>Port of Load</th><th>Port of Discharge</th></tr></thead>
+        <tbody id="ctnSearchBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CONTAINER # SEARCH -->
+  <div class="sec-title" id="ctn-search-sec">&#x1F4E6; Search by Container Number</div>
+  <div class="search-bar">
+    <input type="text" id="ctnSearchInput" placeholder="Enter Container Number (e.g. CAIU4265329)" onkeydown="if(event.key==='Enter')doContainerSearch()">
+    <button onclick="doContainerSearch()">Search</button>
+  </div>
+  <div id="ctnSearchResults" style="display:none;margin-bottom:24px">
+    <div class="tbl-wrap">
+      <table class="stbl">
+        <thead><tr><th>Container #</th><th>Ref No</th><th>Entry No</th><th>Importer</th><th>Content</th><th>Type</th><th>CBM</th><th>Weight LBS</th><th>Pieces</th><th>Status</th><th>ETD</th><th>Port of Load</th><th>Port of Discharge</th></tr></thead>
+        <tbody id="ctnSearchBody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- SMH26 KPIs - SOURCE OF TRUTH for shipment counts -->
   <div class="sec-title" id="smh-sec">&#x1F6A2; Shipments (SMH26) <span class="sec-tag" id="smhTag">&#8212;</span></div>
   <div class="kpi-grid c5">
@@ -328,7 +363,7 @@ footer{text-align:center;padding:18px;font-family:'IBM Plex Mono',monospace;font
   <!-- CONTAINER KPIs - per-container rows, NOT shipment counts -->
   <div class="sec-title" id="ctn-sec">&#x1F4E6; Containers <span class="sec-tag" id="ctnTag">&#8212;</span></div>
   <div class="kpi-grid c5">
-    <div class="kpi-card drill" style="--card-color:#e65100" data-panel="ctn_total" onclick="drillKPI('all','Shipments with Containers')"><div class="kpi-label">Container Records</div><div class="kpi-value" id="ctnTotal">&#8212;</div><div class="kpi-sub">rows in container file</div><div class="kpi-hint">drill in &rarr;</div></div>
+    <div class="kpi-card drill" style="--card-color:#e65100" data-panel="ctn_total" onclick="drillContainers()"><div class="kpi-label">Container Records</div><div class="kpi-value" id="ctnTotal">&#8212;</div><div class="kpi-sub">rows in container file</div><div class="kpi-hint">drill in &rarr;</div></div>
     <div class="kpi-card" style="--card-color:#1565c0" data-panel="ctn_cbm"><div class="kpi-label">Total Volume</div><div class="kpi-value sm" id="ctnCBM">&#8212;</div><div class="kpi-sub">CBM</div></div>
     <div class="kpi-card" style="--card-color:#2e7d32" data-panel="ctn_weight"><div class="kpi-label">Total Weight</div><div class="kpi-value sm" id="ctnWeight">&#8212;</div><div class="kpi-sub">lbs</div></div>
     <div class="kpi-card" style="--card-color:#f57f17" data-panel="ctn_pieces"><div class="kpi-label">Total Pieces</div><div class="kpi-value sm" id="ctnPieces">&#8212;</div><div class="kpi-sub">units</div></div>
@@ -397,6 +432,21 @@ footer{text-align:center;padding:18px;font-family:'IBM Plex Mono',monospace;font
   </div>
 </div>
 
+<!-- CONTAINER DRILL MODAL -->
+<div class="moverlay" id="ctnDrillOv" onclick="closeCtnDrill(event)">
+  <div class="modal">
+    <button class="mc" onclick="closeCtnDrillD()">&#x2715;</button>
+    <div class="modal-hero"><div class="micon">&#x1F4E6;</div><div><h3 id="ctnDrillT">Containers</h3><div class="msub">One row per container · Click Ref No for full shipment detail</div></div></div>
+    <div class="drill-info" id="ctnDrillInfo"></div>
+    <div class="tbl-wrap" style="max-height:480px">
+      <table class="stbl">
+        <thead><tr><th>Container #</th><th>Ref No</th><th>Entry No</th><th>Importer</th><th>Content</th><th>Type</th><th>CBM</th><th>Pieces</th><th>Weight (lbs)</th><th>Status</th><th>Port of Load</th><th>Port of Discharge</th></tr></thead>
+        <tbody id="ctnDrillBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <!-- MAP LOCATION MODAL -->
 <div class="moverlay" id="mapOv" onclick="closeMapM(event)">
   <div class="modal">
@@ -449,7 +499,7 @@ footer{text-align:center;padding:18px;font-family:'IBM Plex Mono',monospace;font
 
 <script>
 var WEB_APP="https://script.google.com/macros/s/AKfycbwGhNtW5dEKIGPTXNXgo7JswcH4MZofQtl9VATf93YiIT_e7YRHGQojsnS0TVc7x9S8fA/exec";
-var allShipments=[], rawKPI={}, activeFilter=null, timer=null;
+var allShipments=[], allContainers=[], rawKPI={}, activeFilter=null, timer=null;
 
 window.onload=function(){
   setToday();
@@ -480,6 +530,8 @@ function loadData(){
         seen[ref]=true;
         return true;
       });
+      // Store container rows for drill + search
+      allContainers=(data.containers||[]);
       renderKPIs(allShipments,rawKPI);
       renderReleases();
       updateMapData(rawKPI);
@@ -630,7 +682,61 @@ function drillKPI(type,label){
   }
   document.getElementById("drillOv").classList.add("open");
 }
-function drillToDetail(ref){closeDrillD();setTimeout(function(){openDet(ref);},150);}
+// ── CONTAINER DRILL (from KPI card) ─────────────────────
+function drillContainers(){
+  var src = activeFilter ? (window._activeRows||allShipments) : allShipments;
+  // Filter containers to only those whose REFERENCE NO is in the active shipment set
+  var refSet = {};
+  src.forEach(function(s){ refSet[s["REFERENCE NO"]] = true; });
+  var ctns = allContainers.filter(function(c){ return refSet[c["REFERENCE NO"]]; });
+  document.getElementById("ctnDrillT").textContent = "Container Records";
+  document.getElementById("ctnDrillInfo").textContent =
+    ctns.length.toLocaleString()+" containers across "
+    +src.length.toLocaleString()+" shipments"+(ctns.length>500?" · showing first 500":"");
+  var tb = document.getElementById("ctnDrillBody");
+  if(!ctns.length){ tb.innerHTML='<tr><td colspan="12" class="nd">No container data loaded yet — run pollFolders() to rebuild</td></tr>'; }
+  else { tb.innerHTML = ctns.slice(0,500).map(function(c){ return ctnRow(c); }).join(""); }
+  document.getElementById("ctnDrillOv").classList.add("open");
+}
+
+// ── CONTAINER SEARCH ────────────────────────────────────
+function searchContainer(){
+  var q = document.getElementById("ctnSearchInput").value.trim().toUpperCase();
+  if(!q) return;
+  var res = allContainers.filter(function(c){
+    return (c["CONTAINER NUMBER"]||"").toUpperCase().indexOf(q) !== -1;
+  });
+  document.getElementById("ctnSearchResults").style.display = "";
+  var tb = document.getElementById("ctnSearchBody");
+  if(!res.length){
+    tb.innerHTML='<tr><td colspan="12" class="nd">No containers found matching "'+q+'"</td></tr>';
+    return;
+  }
+  tb.innerHTML = res.map(function(c){ return ctnRow(c); }).join("");
+}
+
+// ── CONTAINER ROW ────────────────────────────────────────
+function ctnRow(c){
+  var ref = c["REFERENCE NO"]||"";
+  return '<tr>'+
+    '<td style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;font-weight:600;color:#e65100">'+(c["CONTAINER NUMBER"]||"—")+'</td>'+
+    '<td><span class="rl" onclick=\'drillToDetail("'+esc(ref)+'")\'>'+(ref||"—")+'</span></td>'+
+    '<td class="mn">'+(c["ENTRY NUMBER"]||"—")+'</td>'+
+    '<td style="font-weight:500">'+(c["IMPORTER NAME"]||"—")+'</td>'+
+    '<td style="color:var(--muted);font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis">'+(c["CONTENT"]||"—")+'</td>'+
+    '<td class="mn">'+(c["TYPE"]||"—")+'</td>'+
+    '<td class="mn">'+(c["CBM"]||"—")+'</td>'+
+    '<td class="mn">'+(c["PIECES"]||"—")+'</td>'+
+    '<td class="mn">'+(c["WEIGHT LBS"]||"—")+'</td>'+
+    '<td><span class="chip-sm '+(c["STATUS"]==="SAILED"?"chip-g":c["STATUS"]==="OPEN"?"chip-b":"chip-o")+'">'+(c["STATUS"]||"—")+'</span></td>'+
+    '<td style="color:var(--muted);font-size:11px">'+(c["PORT OF LOAD"]||"—")+'</td>'+
+    '<td style="color:var(--muted);font-size:11px">'+(c["PORT OF DISCHARGE"]||"—")+'</td>'+
+  '</tr>';
+}
+
+function closeCtnDrill(e){ if(e.target===document.getElementById("ctnDrillOv")) closeCtnDrillD(); }
+function closeCtnDrillD(){ document.getElementById("ctnDrillOv").classList.remove("open"); }
+
 
 // ── SHIPMENT DETAIL ────────────────────────────────────
 function openDet(ref){
@@ -664,6 +770,95 @@ function closeDet(e){if(e.target===document.getElementById("detailOv"))closeDetD
 function closeDetD(){document.getElementById("detailOv").classList.remove("open");}
 function closeDrill(e){if(e.target===document.getElementById("drillOv"))closeDrillD();}
 function closeDrillD(){document.getElementById("drillOv").classList.remove("open");}
+
+// ── CONTAINER DRILL (from KPI card) ───────────────────
+function drillContainers(){
+  var src = window._activeRows ? allContainers.filter(function(c){
+    // Filter containers to only those matching active shipment filter
+    var ref = (c["REFERENCE NO"]||"").toString().replace(/\.0$/,"").trim();
+    return window._activeRows.some(function(s){ return s["REFERENCE NO"]===ref; });
+  }) : allContainers;
+
+  document.getElementById("ctnDrillT").textContent = "Container Records";
+  document.getElementById("ctnDrillInfo").textContent =
+    src.length.toLocaleString()+" containers"+(src.length>500?" · showing first 500":"");
+
+  var tb = document.getElementById("ctnDrillBody");
+  if(!src.length){ tb.innerHTML='<tr><td colspan="12" class="nd">No container data available</td></tr>'; }
+  else {
+    tb.innerHTML = src.slice(0,500).map(function(c){ return ctnRow(c); }).join("");
+  }
+  document.getElementById("ctnDrillOv").classList.add("open");
+}
+
+function ctnRow(c){
+  var ref=(c["REFERENCE NO"]||c["StatsFile:REFERENCE NO"]||"").toString().replace(/\.0$/,"").trim();
+  return '<tr>'+
+    '<td style="font-family:\'IBM Plex Mono\',monospace;font-weight:600;color:#1565c0">'+(c["CONTAINER NUMBER"]||c["CONTAINER:CONTAINER"]||"—")+'</td>'+
+    '<td><span class="rl" onclick=\'drillToDetail("'+esc(ref)+'")\'>'+ref+'</span></td>'+
+    '<td class="mn">'+(c["ENTRY NUMBER"]||"—")+'</td>'+
+    '<td>'+(c["IMPORTER NAME"]||"—")+'</td>'+
+    '<td style="color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c["CONTENT"]||c["CONTAINER:CONTENT"]||"—")+'</td>'+
+    '<td class="mn">'+(c["TYPE"]||c["CONTAINER:TYPE"]||"—")+'</td>'+
+    '<td class="mn">'+(c["CBM"]||c["CONTAINER:CBM"]||"—")+'</td>'+
+    '<td class="mn">'+(c["PIECES"]||c["CONTAINER:PIECES"]||"—")+'</td>'+
+    '<td class="mn">'+(c["WEIGHT LBS"]||c["CONTAINER:WTLBS"]||"—")+'</td>'+
+    '<td class="mn">'+(c["STATUS"]||c["StatsFile:STATUS"]||"—")+'</td>'+
+    '<td style="color:var(--muted);font-size:10px">'+(c["PORT OF LOAD"]||c["CHB PORT OF LOAD NAME"]||"—")+'</td>'+
+    '<td style="color:var(--muted);font-size:10px">'+(c["PORT OF DISCHARGE"]||c["CHB PORT OF DCHG NAME"]||"—")+'</td>'+
+  '</tr>';
+}
+
+// ── CONTAINER # SEARCH ────────────────────────────────
+function doContainerSearch(){
+  var q = document.getElementById("ctnSearchInput").value.trim().toUpperCase();
+  if(!q) return;
+
+  // Search allContainers by container number
+  var res = allContainers.filter(function(c){
+    var cnum = (c["CONTAINER NUMBER"]||c["CONTAINER:CONTAINER"]||"").toUpperCase();
+    return cnum.indexOf(q) !== -1;
+  });
+
+  // Also check within allShipments CONTAINER NUMBERS field
+  var shipMatches = allShipments.filter(function(s){
+    return (s["CONTAINER NUMBERS"]||"").toUpperCase().indexOf(q) !== -1;
+  });
+
+  document.getElementById("ctnSearchResults").style.display = "";
+  var tb = document.getElementById("ctnSearchBody");
+
+  if(!res.length && !shipMatches.length){
+    tb.innerHTML='<tr><td colspan="13" class="nd">No containers found matching "'+q+'"</td></tr>';
+    return;
+  }
+
+  // If we have direct container rows, show those
+  if(res.length){
+    tb.innerHTML = res.map(function(c){ return ctnRow(c); }).join("");
+  } else {
+    // Fall back to shipment container numbers field
+    tb.innerHTML = shipMatches.map(function(s){
+      return '<tr>'+
+        '<td style="font-family:\'IBM Plex Mono\',monospace;font-weight:600;color:#1565c0">'+(s["CONTAINER NUMBERS"]||"—")+'</td>'+
+        '<td><span class="rl" onclick=\'drillToDetail("'+esc(s["REFERENCE NO"])+'")\'>'+( s["REFERENCE NO"]||"—")+'</span></td>'+
+        '<td class="mn">'+(s["ENTRY NUMBER"]||"—")+'</td>'+
+        '<td>'+(s["IMPORTER NAME"]||"—")+'</td>'+
+        '<td style="color:var(--muted)">'+(s["CONTAINER TYPES"]||"—")+'</td>'+
+        '<td class="mn">—</td>'+
+        '<td class="mn">'+(s["TOTAL CBM"]||"—")+'</td>'+
+        '<td class="mn">—</td>'+
+        '<td class="mn">'+(s["TOTAL WEIGHT LBS"]||"—")+'</td>'+
+        '<td class="mn">—</td>'+
+        '<td style="color:var(--muted)">—</td>'+
+        '<td style="color:var(--muted)">'+(s["CHB PORT OF DCHG NAME"]||"—")+'</td>'+
+      '</tr>';
+    }).join("");
+  }
+}
+
+function closeCtnDrill(e){if(e.target===document.getElementById("ctnDrillOv"))closeCtnDrillD();}
+function closeCtnDrillD(){document.getElementById("ctnDrillOv").classList.remove("open");}
 
 // ── MAP ───────────────────────────────────────────────
 var PORT_COORDS={"NEW YORK/NEWARK AREA":[40.684,-74.175],"LOS ANGELES, CA":[33.740,-118.262],"NEW YORK, NY":[40.713,-74.006],"JFK AIRPORT":[40.641,-73.778],"SAVANNAH, GA":[32.084,-81.100],"BUFFALO-NIAGARA FALLS":[42.886,-78.878],"LONG BEACH, CA":[33.770,-118.194],"PT OF NORFOLK-NWPT NWS":[36.946,-76.315],"LOS ANGELES INT AIRPORT":[33.943,-118.408],"HOUSTON, TX":[29.760,-95.370],"CHARLESTON, SC":[32.777,-79.931],"BOSTON, MA":[42.360,-71.059],"CHICAGO, IL":[41.878,-87.630],"SEATTLE, WA":[47.606,-122.332],"METROPOLITAN OAKLAND INT":[37.721,-122.221],"SAN FRANCISCO INTL AIRPO":[37.621,-122.379],"DALLAS/FT WORTH TX":[32.900,-97.040],"ATLANTA INTL AIRPORT (AT":[33.641,-84.428],"CLEVELAND, OH":[41.499,-81.694],"ST. LOUIS, MO":[38.627,-90.199]};
@@ -862,7 +1057,17 @@ function num(v,dec){var n=parseFloat(v);return isNaN(n)?"\u2014":n.toLocaleStrin
 function money(v){var n=parseFloat(v);return(isNaN(n)||n===0)?"$0":"$"+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
 function setStatus(state,text){document.getElementById("statusPill").className="status-pill "+(state==="active"?"":state);document.getElementById("statusText").textContent=text;}
 function todayStr(){var d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
-function nd(str){if(!str)return"";str=str.trim();var m=str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return m[3]+"-"+pad(m[1])+"-"+pad(m[2]);if(str.match(/^\d{4}-\d{2}-\d{2}/))return str.substring(0,10);return str;}
+function nd(str){
+  if(!str)return"";
+  str=str.toString().trim();
+  if(!str||str==="/  /"||str.replace(/[\s\/]/g,"")==="")return"";
+  // M/D/YYYY or MM/DD/YYYY (with possible leading space already trimmed)
+  var m=str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m)return m[3]+"-"+pad(parseInt(m[1]))+"-"+pad(parseInt(m[2]));
+  // Already YYYY-MM-DD
+  if(str.match(/^\d{4}-\d{2}-\d{2}/))return str.substring(0,10);
+  return str;
+}
 function pad(n){return n<10?"0"+n:""+n;}
 function esc(s){return(s||"").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
 </script>
